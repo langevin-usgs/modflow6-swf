@@ -1,0 +1,11 @@
+LIST           7 Results/SWRSample04.lst
+BAS6           1 SWRSample04.bas
+DIS           29 SWRSample04.dis
+LPF           11 SWRSample04.lpf
+OC            22 SWRSample04.oc
+PCG           19 SWRSample04.pcg
+SWR           61 SWRSample04.swr
+DATA         201 Data/Reach1Inflow.ref
+DATA        101 Results/SWRSample04_GroupFlow.csv
+DATA         102 Results/SWRSample04_Stage.csv
+DATA        103 Results/SWRSample04_Velocity.csv
