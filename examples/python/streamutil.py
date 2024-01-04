@@ -198,7 +198,7 @@ class StreamUtil():
         )
         return dtype
     
-    def get_vertices_cell2d(self):
+    def get_verts_iverts_by_linevertices(self):
         verts = []
         iverts = []
         for i in range(self.nreaches):
@@ -219,7 +219,36 @@ class StreamUtil():
                         iv = nvert
                     iverts[icell].append(iv)
                 icell += 1
+        return verts, iverts
+    
+    def get_verts_iverts_bygrid(self):
+        ixs = self.intersection_results
+        verts = []
+        iverts = []
+        for i in range(self.nreaches):
+            iverts.append([])
+        icell = 0
+        for ix in ixs:
+            segment_line = ix["vertices"]
+            for reach_line in segment_line:
+                for xypoint in reach_line:
+                    nvert = len(verts)
+                    if xypoint in verts:
+                        iv = verts.index(xypoint)
+                    else:
+                        verts.append(xypoint)
+                        iv = nvert
+                    iverts[icell].append(iv)
+                icell += 1
+        return verts, iverts
 
+    def get_vertices_cell2d(self, grid_based=False):
+        if grid_based:
+            if self.modelgrid is None:
+                raise Exception("Cannot discretize reaches by model grid.  No model grid found.")
+            verts, iverts = self.get_verts_iverts_bygrid()
+        else:
+            verts, iverts = self.get_verts_iverts_by_linevertices()
         vertices = [(iv, x, y, 0.) for iv, (x, y) in enumerate(verts)]
         cell2d = [(icell, 0.5, len(iverts[icell])) + tuple(iverts[icell]) for icell in range(self.nreaches)]
         return vertices, cell2d
