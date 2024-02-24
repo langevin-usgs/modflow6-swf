@@ -1,0 +1,97 @@
+\documentclass[fleqn]{article}
+\author{Authors from Deltares and USGS}
+
+\usepackage{amsmath}
+
+\begin{document}
+
+\title{Surface Water Flow in MODFLOW 6}
+\maketitle
+
+\tableofcontents
+
+\section{Theoretical Development}
+In this section ...
+
+\subsection{Conservation of Mass}
+Partial differential equation on conservation of mass:
+
+\subsection{Manning's Equation}
+Manning's equation is given as
+
+\begin{equation}
+  Q = \frac{1}{n} A R^{2 \over 3} \sqrt{S_f}
+\end{equation}
+
+\subsection{Storage Term}
+The change in mass of water 
+
+\subsection{Channel Cross Sections}
+
+\section{Numerical Solution}
+
+\subsection{Newton-Raphson Method}
+
+Flow throughout the connected channel network is based on a Newton-Raphson formulation, in which the following equation is formulated and solved simultaneously for each reach
+
+\begin{equation}
+\label{eqn:nr-cvfd}
+\begin{split}
+\left ( \sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_n} + \frac{\partial Q_{n,s}}{\partial h_n} - \frac{\partial Q_{STO}}{\partial h_n} \right ) h^k_n + 
+\sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_m} h^k_{m} = \\
+- \left ( \sum\limits_{m \in \eta_{n}} Q_{n,m} + Q_{n,s} - Q_{STO} \right ) + \\
+\left ( \sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_n} + \frac{\partial Q_{n,s}}{\partial h_n} - \frac{\partial Q_{STO}}{\partial h_n} \right ) h^{k-1}_n + \sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_m} h^{k-1}_{m}.
+\end{split}
+\end{equation}
+
+
+\subsection{Discretized Flow Expression}
+
+Manning's equation is written as
+
+\begin{equation}
+  Q = \frac{1}{n} A R^{2 \over 3} \sqrt{S_f}
+\end{equation}
+
+\noindent For the numerical implementation in MODFLOW we express Manning's equation as a product of a conductance term and the product of the head difference between reach $n$ and $m$
+
+\begin{equation}
+  Q_{nm} = C_{nm} \left ( h_m - h_n \right )
+\end{equation}
+
+\noindent The average conductance between the two cells $C_{nm}$ is calculated using the following harmonic mean, which consists the half-cell conductance in reach $n$ and the half-cell conductance in reach $m$
+
+\begin{equation}
+  C_{nm} = \frac{C_n  C_m}{C_n + C_m}
+\end{equation}
+
+The half-cell conductance for reach $n$ is calculated as
+
+\begin{equation}
+  C_n = \frac{B_n}{ L_{nm} \sqrt{ \frac{ | \left ( h_m - h_n \right ) | } {L_{nm} + L_{mn}}} }
+\end{equation}
+
+\noindent where $B_n$ is the conveyance for reach $n$.  Conveyance is calculated in several different ways depending on how the cross section is defined.  In the simplest case, the conveyance is calculated as
+
+\begin{equation}
+  B_n = \frac{A_n R_n^{2 \over 3}}{n}
+\end{equation}
+
+
+
+\subsection{Temporal Discretization}
+Adaptive time stepping
+
+\subsection{Sources and Sinks}
+
+\subsection{Initial and Boundary Conditions}
+
+\section{Integration into MODFLOW 6}
+
+\section{Model Verification}
+
+\subsection{Analytical Results}
+
+\subsection{Example Problems}
+
+\end{document}
