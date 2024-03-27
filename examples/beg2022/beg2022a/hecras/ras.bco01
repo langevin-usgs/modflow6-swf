@@ -1,0 +1,66 @@
+ 
+                                              HEC-RAS - River Analysis System
+ 
+ 
+Project File:  z:\langevin\dev\modflow6-swf\examples\hec-ras\beg2022\ras.prj
+ 
+Project Name:  ras
+ 
+ 
+Plan Name:     unsteady-flow
+ 
+Short ID:      myplan
+ 
+
+Starting Time:   30Dec1999 2400
+
+Ending Time:     31Dec1999 2400
+
+
+                ################################################
+                #                                              #
+                #                                              #
+                #       1D and 2D Unsteady Flow Module         #
+                #                                              #
+                #                                              #
+                #          HEC-RAS 6.4.1 June 2023             #
+                #                                              #
+                #             15DEC23 at 15:30:53              #
+                #                                              #
+                ################################################
+                
+ 
+ 
+ 
+
+
+
+                 ***   Volume Accounting for 1D Flow Area in 1000 m^3   ***
+
+         US Inflow      DS Outflow       Lat Hydro        SA Hydro     Groundwater      Diversions   Precip Excess
+         *********      **********       *********        ********     ***********      **********   *************
+             1746.           1746.                                                                                                
+
+    Start 1D Reach  Final 1D Reach   Starting SA's      Final SA's
+    **************  **************   *************      **********
+             755.0           754.7                                
+
+ 
+
+
+
+                 ***  Total Volume Accounting (for the entire model) in 1000 m^3   ***
+
+Total Boundary Flux of Water In            1746.
+Total Boundary Flux of Water Out           1746.
+
+Starting Volume                            755.0
+Ending Volume                              754.7
+
+
+                             Error   Percent Error
+                             *****   *************
+                          0.009793        0.000392
+
+
+

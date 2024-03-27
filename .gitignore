@@ -1,0 +1,15 @@
+*.pyc
+.ipynb_checkpoints/
+
+doc/swf.aux
+doc/swf.bbl
+doc/swf.log
+doc/swf.pdf
+doc/swf.synctex.gz
+doc/swf.toc
+
+examples/basin/mf6_ss_drn
+examples/basin/mf6_ss_sfr
+examples/basin/mf6_ss_swf
+examples/basin/mf6_swf
+
