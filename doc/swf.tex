@@ -24,11 +24,11 @@ Partial differential equation on conservation of mass:
 Manning's equation is given as
 
 \begin{equation}
-  Q = \frac{1}{n} A R^{2 \over 3} \sqrt{S_f}
+  Q = \frac{1}{n} A R^{\frac{2}{3}} \sqrt{S_f}
 \end{equation}
 
 \subsection{Storage Term}
-The change in mass of water 
+The change in mass of water is
 
 \subsection{Channel Cross Sections}
 
@@ -38,10 +38,10 @@ The change in mass of water
 
 % This figure below is for the case where roughness varies for each line segment in the cross section 
 \begin{figure}
-	\centering
-	\includegraphics[scale=0.9]{figures/channel_network.pdf}
-	\caption[Schematic showing a channel network.]{Schematic showing a channel network.  The channel network is discretized by the user into computational elements called reaches.  Stage is calculated within the reach at stage calculation points.  Stage calculations are typically located halfway between the reach start and reach end vertices, however, the user can adjust the fractional position of the stage calculation point along the reach.}
-	\label{fig:channel_network}
+\centering
+\includegraphics[scale=0.9]{figures/channel_network.pdf}
+\caption[Schematic showing a channel network.]{Schematic showing a channel network.  The channel network is discretized by the user into computational elements called reaches.  Stage is calculated within the reach at stage calculation points.  Stage calculations are typically located halfway between the reach start and reach end vertices, however, the user can adjust the fractional position of the stage calculation point along the reach.}
+\label{fig:channel_network}
 \end{figure}
 
 \subsection{Two-Dimensional Overland Flow}
@@ -68,7 +68,7 @@ Flow throughout the connected channel network is based on a Newton-Raphson formu
 Manning's equation is written as
 
 \begin{equation}
-  Q = \frac{1}{n} A R^{2 \over 3} \sqrt{S_f}
+  Q = \frac{1}{n} A R^{\frac{2}{3}} \sqrt{S_f}
 \end{equation}
 
 \noindent where $R$ is the hydraulic radius equal to $A / P$.  For the numerical implementation in MODFLOW we express Manning's equation as a product of a conductance term and the head difference between reach $n$ and $m$:
@@ -93,7 +93,7 @@ The conductance for reach $n$ in the $m$ direction ($C_{n \rightarrow | m}$) can
   C_{n \rightarrow | m} = 
   \frac{
   A_n 
-  R_{n}^{2 \over 3}
+  R_{n}^{\frac{2}{3}}
   }
   {n_n
   L_{n \rightarrow | m}
@@ -105,7 +105,7 @@ The conductance for reach $n$ in the $m$ direction ($C_{n \rightarrow | m}$) can
 
 %\begin{equation}
 %  C_{n \rightarrow | m} = 
-% \frac{A_n R_{n}^{2 \over 3}}{n_n}
+% \frac{A_n R_{n}^{\frac{2}{3}}}{n_n}
 % \frac{1}{L_{n \rightarrow | m}}
 % \frac{1}{ \sqrt{ \frac{ | \left ( h_m - h_n \right ) | } {L_{nm}}} }
 %  \frac{1}{\sqrt{| \gamma_n |}}
@@ -115,19 +115,19 @@ The conductance for reach $n$ in the $m$ direction ($C_{n \rightarrow | m}$) can
 %  C_{n \rightarrow | m} = \frac{B_n}{ L_{nm} \sqrt{ \frac{ | \left ( h_m - h_n \right ) | } {L_{nm}}} }
 %\end{equation}
 
-\noindent where $A_n$ is the cross-sectional flow area ($L^2$) for reach $n$ calculated as a function of the water depth, $R_n$ is the hydraulic radius ($L$) for reach $n$, which is the cross-sectional flow area divided by the wetted perimeter, calculated as a function of the water depth, $n_n$ is the Manning's roughness coefficient ($T/L^{1 \over 3}$) for reach $n$,  $L_{n \rightarrow | m}$ is the distance ($L$) from the stage calculation point to the shared edge between reach $n$ and $m$, and $\gamma_n$ is the hydraulic gradient ($L^0$) for reach $n$.
+\noindent where $A_n$ is the cross-sectional flow area ($L^2$) for reach $n$ calculated as a function of the water depth, $R_n$ is the hydraulic radius ($L$) for reach $n$, which is the cross-sectional flow area divided by the wetted perimeter, calculated as a function of the water depth, $n_n$ is the Manning's roughness coefficient ($T/L^{\frac{1}{3}}$) for reach $n$,  $L_{n \rightarrow | m}$ is the distance ($L$) from the stage calculation point to the shared edge between reach $n$ and $m$, and $\gamma_n$ is the hydraulic gradient ($L^0$) for reach $n$.
 
 Several of the terms in equation \ref{eqn:cn} are combined into a single term for reach $n$ called channel conveyance ($B_n$), which is defined as
 
 \begin{equation}
-  B_n = \frac{A_n R_n^{2 \over 3}}{n_n}.
+  B_n = \frac{A_n R_n^{\frac{2}{3}}}{n_n}.
 \label{eqn:conveyance}
 \end{equation}
 
 \noindent Channel conveyance for reach $n$ is calculated as a function of an upstream-weighted water depth.  Thus, channel conveyance for reach $n$ can be written as
 
 \begin{equation}
-  B_n = \frac{A_n (d_u) R_n (d_u) ^{2 \over 3}}{n_n},
+  B_n = \frac{A_n (d_u) R_n (d_u) ^{\frac{2}{3}}}{n_n},
 \label{eqn:conveyancedu}
 \end{equation}
 
@@ -152,13 +152,13 @@ With this definition for channel conveyance, equation \ref{eqn:cn} can be simpli
   L_{n \rightarrow | m}
   \sqrt{| \gamma_n |}
   },
-\label{eqn:cn}
+\label{eqn:cn2}
 \end{equation}
 
 Channel conveyance is calculated in several different ways depending on how a cross section is defined for a reach.  For the cross sections shown in figure \ref{fig:cxs} a single Manning's roughness coefficient is assigned for the entire section.  If a single Manning's roughness coefficient is used to define the entire section for reach $n$, then the channel conveyance is calculated according to equation \ref{eqn:conveyance}.  If a cross section does not have a constant Manning's roughness coefficient for all line segments that define the channel, as shown for example in Figure \ref{fig:cxs_rough}, then a composite conveyance is calculated by summing the individual conveyance parts for the channel as
 
 \begin{equation}
-  B_n = \sum_{i=1}^{NLS} \frac{A_{n,i} \left ( \frac {A_{n,i}}{P_{n,i}}\right )^{2 \over 3}}{n_{n,i}},
+  B_n = \sum_{i=1}^{NLS} \frac{A_{n,i} \left ( \frac {A_{n,i}}{P_{n,i}}\right )^{\frac{2}{3}}}{n_{n,i}},
 \end{equation}
 
 \noindent where $NLS$ is the number of line segments used to define the channel cross section.
@@ -200,11 +200,24 @@ A zero-depth-gradient (ZDG) boundary condition can be assigned to any reach to a
 
 \subsection{Tilted V-Catchment}
 
-Example problem is described by \cite{digiammarco1996}, \cite{VanderKwaak1999}, and \cite{panday2004}.
+The MODFLOW 6 SWF Model was used to simulate the tilted V-catchment problem described by \cite{digiammarco1996}.  This tilted V-catchment problem has been used by~\cite{VanderKwaak1999} and \cite{panday2004} to test numerical models of two-dimensional overland in response to a rainfall event.
+
+The configuration of the tilted V-catchment is shown in Figure~\ref{fig:vcatch-surface}.  The left and right sides of the domain consist of sloping flat planes.  The flat planes are tilted to the south and toward the middle of the domain, forming a V-shaped catchment.  A slope of 0.05 is used for the x direction, and a slope of 0.02 is used for the y direction.  Located between the two sloping planes is a 20-m wide stream channel that slopes from north to south.  Two different Mannings roughness coefficients are used.  A value of 0.015 is assigned to the sloping planes and a value of 0.15 is assigned to the stream channel.  These values are not realistic, in that roughness coefficients are generally lower within a stream channel compared to sloping surfaces, but they were selected as a difficult test for simulating overland flow.  A zero-depth gradient boundary condition assigned as the southernmost part of the stream provides the sole outlet for the domain.
 
 \begin{figure}
 	\centering
-	\includegraphics[scale=1.]{figures/vcatch.png}
+	\includegraphics[scale=0.75]{figures/vcatch-surface.png}
+	\caption[Configuration of the tilted v-catchment example.]{Configuration of the tilted v-catchment example.  Contours represent land surface.  A slope of 0.05 is used for the x direction, and a slope of 0.02 is used for the y direction.  A 20-m wide stream channel, shown in gray, slopes from north to south.}
+	\label{fig:vcatch-surface}
+\end{figure}
+
+The domain is discretized into a regular model grid consisting of 50 rows and 81 columns.  Each cell is square with a dimension of 20 m.  Rainfall is uniformly applied to the domain at a rate of $3 \times 10^{-6}$ for a period of 90 minutes.  A second 90-minute period with no rainfall is also represented to simulate drainage of the domain in response to the rainfall event.  Following the settings used by~\cite{panday2004} adaptive time stepping is used with an inital time step of 5 s and a maximum time step of 100 s.  Time steps increase or decrease by a factor of two in response to solver behavior.
+
+Results from the MODFLOW 6 SWF Model simulation are compared in Figure~\ref{fig:vcatch} with the simulations results of~\cite{digiammarco1996},~\cite{VanderKwaak1999}, and~\cite{panday2004}.  In general, the model results from MODFLOW 6 compare favorably with the results from these other models; however, rates of simulated outflow from the MODFLOW 6 simulation rise and fall more quickly than for the other models.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.75]{figures/vcatch-results.png}
 	\caption[Simulated outflow for the tilted v-catchment example.]{Simulated outflow for the tilted v-catchment example.  MODFLOW 6 results are shown on top of Figure 4-10a in \cite{VanderKwaak1999}.  Dashed blue line separates the first 90-minute period with rainfall from the second 90-minute period with no rainfall.}
 	\label{fig:vcatch}
 \end{figure}
