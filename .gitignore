@@ -2,11 +2,13 @@
 .ipynb_checkpoints/
 
 doc/swf.aux
+doc/swf.blg
 doc/swf.bbl
 doc/swf.log
 doc/swf.pdf
 doc/swf.synctex.gz
 doc/swf.toc
+doc/swf.fdb_latexmk
 
 examples/basin/mf6_ss_drn
 examples/basin/mf6_ss_sfr

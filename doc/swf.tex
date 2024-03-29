@@ -1,5 +1,5 @@
 \documentclass[fleqn]{article}
-\author{Authors from Deltares and USGS}
+\author{MODFLOW Development Team}
 
 \usepackage{amsmath}
 \usepackage{xcolor}
@@ -14,29 +14,49 @@
 
 \tableofcontents
 
-\section{Theoretical Development}
-In this section ...
+\section{Introduction}
+The Surface Water Flow (SFW) Model simulates one-dimensional channel flow and two-dimensional overland flow.  The SWF Model is a new model type in the MODFLOW 6 framework.  Like other models in the MODFLOW 6 framework, the SWF Model consists of required and optional packages.
 
-\subsection{Conservation of Mass}
-Partial differential equation on conservation of mass:
-
-\subsection{Manning's Equation}
-Manning's equation is given as
+\subsection{Mathematical Model}
+Following~\cite{panday2004} and~\cite{hughes2012documentation} The diffusive wave approximation to the full St. Venant equations can be expressed as
 
 \begin{equation}
-  Q = \frac{1}{n} A R^{\frac{2}{3}} \sqrt{S_f}
+  \frac{\partial A}{\partial t} +
+  \frac{\partial}{\partial \ell}
+  \left (
+  \frac{A R^{\frac{2}{3}}}{n \left | \frac{\partial h}{\partial \ell} \right |^{\frac{1}{2}} } \frac{\partial h}{\partial \ell}
+  \right )
+  + A q_{\ell}
+  = 0
+  \label{eqn:onedpd}
 \end{equation}
 
-\subsection{Storage Term}
-The change in mass of water is
+\noindent for one-dimensional channel flow or as
 
-\subsection{Channel Cross Sections}
+\begin{equation}
+  \frac{\partial h}{\partial t}
+  + \frac{\partial}{\partial x}
+  \left (
+  \frac{d^{\frac{5}{3}}}{n \left | \frac{\partial h}{\partial s} \right |^{\frac{1}{2}} } \frac{\partial h}{\partial x}
+  \right )
+  + \frac{\partial}{\partial y}
+  \left (
+  \frac{d^{\frac{5}{3}}}{n \left | \frac{\partial h}{\partial s} \right |^{\frac{1}{2}} } \frac{\partial h}{\partial y}
+  \right )
+  + d q_s
+  = 0
+  \label{eqn:twodpd}
+\end{equation}
+
+\noindent for two-dimensional overland flow.  In equation~\ref{eqn:onedpd}, $\ell$ is the coordinate direction along the stream channel.  In equation~\ref{eqn:twodpd}, $x$ and $y$ are the two-dimensional coordinate directions. In both equation~\ref{eqn:onedpd} and equation~\ref{eqn:twodpd} $A$ is the cross-sectional area ($L^2$) for flow, $t$ is time ($T$), $s$ is the direction along the channel, $R$ is the hydraulic radius ($L$), $n$ is the Mannings roughness coefficient ($T/L^{\frac{1}{3}}$), $q_{\ell}$ is a source or sink term, in dimensions of $1/T$, representing the volume of water per unit volume of channel per unit time, $h$ is the water surface elevation ($L$) defined as the depth of water $d$ above the channel bottom elevation $z$ ($d = h - z$), and $q_s$ is a source and sink term, in dimensions of $1/T$, representing the source or sink volume of water per unit volume per unit time.
 
 \section{Spatial Discretization}
+The SWF Model supports two different types of discretization approaches: a one-dimensional channel network and a two-dimensional structured or unstructured overland flow grid.  A SWF Model must use one or the other discretization approach.  
 
 \subsection{One-Dimensional Channel Network}
 
-% This figure below is for the case where roughness varies for each line segment in the cross section 
+A one-dimensional channel network is represented using the Discretization by Lines (DISL) Package.  
+
 \begin{figure}
 \centering
 \includegraphics[scale=0.9]{figures/channel_network.pdf}
@@ -45,7 +65,9 @@ The change in mass of water is
 \end{figure}
 
 \subsection{Two-Dimensional Overland Flow}
+Two-dimensional overland flow can be represented using either the regular structured grid discretization (DIS) Package or the unstructured discretization by vertices (DISV) Package.  
 
+\subsection{Channel Cross Sections}
 
 \section{Numerical Solution}
 
