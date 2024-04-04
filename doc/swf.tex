@@ -220,9 +220,19 @@ A zero-depth-gradient (ZDG) boundary condition can be assigned to any reach to a
 
 \section{Examples}
 
+\subsection{Axisymmetric Overland Flow}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.50]{figures/axi-results.png}
+	\caption[Simulation results for the axisymmetric overland flow problem.]{Simulation results for the axisymmetric overland flow problem.}
+	\label{fig:axi-results}
+\end{figure}
+
+
 \subsection{Tilted V-Catchment}
 
-The MODFLOW 6 SWF Model was used to simulate the tilted V-catchment problem described by \cite{digiammarco1996}.  This tilted V-catchment problem has been used by~\cite{VanderKwaak1999} and \cite{panday2004} to test numerical models of two-dimensional overland in response to a rainfall event.
+The MODFLOW 6 SWF Model was used to simulate the tilted V-catchment problem described by \cite{digiammarco1996}.  This tilted V-catchment problem has been used by~\cite{VanderKwaak1999},~\cite{panday2004} and by~\cite{hughes2015}, for example, to test numerical models of two-dimensional overland in response to a rainfall event.
 
 The configuration of the tilted V-catchment is shown in Figure~\ref{fig:vcatch-surface}.  The left and right sides of the domain consist of sloping flat planes.  The flat planes are tilted to the south and toward the middle of the domain, forming a V-shaped catchment.  A slope of 0.05 is used for the x direction, and a slope of 0.02 is used for the y direction.  Located between the two sloping planes is a 20-m wide stream channel that slopes from north to south.  Two different Mannings roughness coefficients are used.  A value of 0.015 is assigned to the sloping planes and a value of 0.15 is assigned to the stream channel.  These values are not realistic, in that roughness coefficients are generally lower within a stream channel compared to sloping surfaces, but they were selected as a difficult test for simulating overland flow.  A zero-depth gradient boundary condition assigned as the southernmost part of the stream provides the sole outlet for the domain.
 
@@ -235,12 +245,12 @@ The configuration of the tilted V-catchment is shown in Figure~\ref{fig:vcatch-s
 
 The domain is discretized into a regular model grid consisting of 50 rows and 81 columns.  Each cell is square with a dimension of 20 m.  Rainfall is uniformly applied to the domain at a rate of $3 \times 10^{-6}$ for a period of 90 minutes.  A second 90-minute period with no rainfall is also represented to simulate drainage of the domain in response to the rainfall event.  Following the settings used by~\cite{panday2004} adaptive time stepping is used with an inital time step of 5 s and a maximum time step of 100 s.  Time steps increase or decrease by a factor of two in response to solver behavior.
 
-Results from the MODFLOW 6 SWF Model simulation are compared in Figure~\ref{fig:vcatch} with the simulations results of~\cite{digiammarco1996},~\cite{VanderKwaak1999}, and~\cite{panday2004}.  In general, the model results from MODFLOW 6 compare favorably with the results from these other models; however, rates of simulated outflow from the MODFLOW 6 simulation rise and fall more quickly than for the other models.
+Results from the MODFLOW 6 SWF Model simulation are compared in Figure~\ref{fig:vcatch} with the simulations results of~\cite{digiammarco1996},~\cite{VanderKwaak1999},~\cite{panday2004} and~\cite{hughes2015}.  In general, the model results from MODFLOW 6 compare favorably with the results from these other models; however, rates of simulated outflow from the MODFLOW 6 simulation rise and fall more quickly than for the other models.
 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.75]{figures/vcatch-results.png}
-	\caption[Simulated outflow for the tilted v-catchment example.]{Simulated outflow for the tilted v-catchment example.  MODFLOW 6 results are shown on top of Figure 4-10a in \cite{VanderKwaak1999}.  Dashed blue line separates the first 90-minute period with rainfall from the second 90-minute period with no rainfall.}
+	\caption[Simulated discharge for the tilted v-catchment example.]{Simulated discharge for the tilted v-catchment example.  Dashed blue line separates the first 90-minute period with rainfall from the second 90-minute period with no rainfall.}
 	\label{fig:vcatch}
 \end{figure}
 

@@ -16,3 +16,5 @@ examples/basin/mf6_ss_swf
 examples/basin/mf6_swf
 
 examples/vcatch/mf6_*
+
+examples/axisymmetric/mf6_*

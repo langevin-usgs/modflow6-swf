@@ -228,6 +228,11 @@ INPUT ./figures/cxs_rough.pdf
 INPUT figures/cxs_rough.pdf
 INPUT ./figures/cxs_rough.pdf
 INPUT ./figures/cxs_rough.pdf
+INPUT ./figures/axi-results.png
+INPUT ./figures/axi-results.png
+INPUT figures/axi-results.png
+INPUT ./figures/axi-results.png
+INPUT ./figures/axi-results.png
 INPUT ./figures/vcatch-surface.png
 INPUT ./figures/vcatch-surface.png
 INPUT figures/vcatch-surface.png
