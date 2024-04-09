@@ -18,3 +18,5 @@ examples/basin/mf6_swf
 examples/vcatch/mf6_*
 
 examples/axisymmetric/mf6_*
+examples/axisymmetric/swr-model/*.stg
+examples/axisymmetric/swr-model/*.lst
