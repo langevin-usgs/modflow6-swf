@@ -22,3 +22,4 @@ examples/axisymmetric/swr-model/*.stg
 examples/axisymmetric/swr-model/*.lst
 
 examples/radialvoronoi/mf6_*
+examples/radialstructured/mf6_*
