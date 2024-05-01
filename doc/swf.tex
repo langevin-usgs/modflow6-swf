@@ -186,7 +186,7 @@ Channel conveyance is calculated in several different ways depending on how a cr
 \noindent where $NLS$ is the number of line segments used to define the channel cross section.
 
 % This figure below is for the case where roughness is the same for every line segment in the cross section 
-\begin{figure}
+\begin{figure}[h!tbp]
 	\centering
 	\includegraphics[scale=0.5]{figures/cxs.pdf}
 	\caption[Schematic showing different types of channel cross sections with constant roughness.]{Schematic showing different types of cross sections with a single Manning's roughness coefficient $n$: (a) hydraulically wide cross section defined using the width input parameter; (b) hydraulically wide cross section defined using two points; (c) a rectangular cross section defined using four points, and (d) a trapezoidal cross section defined using four points.  For the hydraulically wide rectangular cross sections in (a) and (b) the model does not include any channel resistance for the vertical wetted sections corresponding to the dashed lines.  For cross sections shown in (c) and (d), if the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
@@ -194,7 +194,7 @@ Channel conveyance is calculated in several different ways depending on how a cr
 \end{figure}
 
 % This figure below is for the case where roughness varies for each line segment in the cross section 
-\begin{figure}
+\begin{figure}[h!tbp]
 	\centering
 	\includegraphics[scale=0.5]{figures/cxs_rough.pdf}
 	\caption[Schematic showing different types of channel cross sections with variable roughness.]{Schematic showing different types of cross sections with variable Manning's roughness coefficient: (a) a rectangular cross section defined using four points, and (b) a trapezoidal cross section defined using four points.  The Manning's roughness coefficient is varies by line segment.  If the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
@@ -220,14 +220,78 @@ A zero-depth-gradient (ZDG) boundary condition can be assigned to any reach to a
 
 \section{Examples}
 
+\subsection{One-Dimensional Channel and Overland Flow}
+% background
+One-dimensional surface water flow represented using the diffusive wave approximation is subject to the following governing equation
+
+\begin{equation}
+  \frac{\partial h}{\partial t} = \frac{\partial}{\partial x} 
+  \left ( \frac{h^{5/3}}{n \left | \frac{\partial h}{\partial x} \right |^{1/2}} 
+  \frac{\partial h}{\partial x} \right ) = 0 .
+\end{equation}
+
+\noindent For flow between two prescribed stage boundaries, with stages of $h_0$ and $h_1$ at x locations of $x_0$ and $x_1$, respectively, the analytical solution is
+
+\begin{equation}
+  h = \left [ \left (1 - \rho \right ) h^{\frac{13}{3}}_{0} + \rho h^{\frac{13}{3}}_{1} \right ]^{\frac{3}{13}} ,
+  \label{eqn:soln_ss}
+\end{equation}
+
+\noindent where
+
+\begin{equation}
+  \rho \equiv \frac{x - x_0}{x_1 - x_0} .
+  \label{eqn:rho_defined_x}
+\end{equation}
+
+% purpose
+The purpose of this example is to show a comparison of the SWR Model with the analytical solution. 
+
+% expectation
+Results from the SWR Model should be in close agreement with the analytical solution.  Slight differences between the staged simulated by SWF and those calculated by the analytical solution are expected, however, due to upstream weighting in the numerical implementation.
+
+%problem description
+One dimensional flow is simulated using two different appraoches.  The DISV1D discretization is used for the first approach, whereas the DIS2D discretization, with a single row, is used for the second approach.
+
+%results
+
 \subsection{Axisymmetric Overland Flow}
 
-\begin{figure}
+The axisymmetric flopy problem developed by~\cite{lal2001}, and used by~\cite{hughes2015} to test the SWR Process for MODFLOW-2005, is used to test the SWF Model for MODFLOW 6.  The problem is based on the transient decay of a circular mound of surface water.
+
+
+
+\begin{figure}[h!tbp]
 	\centering
-	\includegraphics[scale=0.50]{figures/axi-results.png}
+	\includegraphics[scale=0.70]{figures/axi-results.png}
 	\caption[Simulation results for the axisymmetric overland flow problem.]{Simulation results for the axisymmetric overland flow problem.}
 	\label{fig:axi-results}
 \end{figure}
+
+\subsection{Radial Flow}
+If the bed is level at elevation $z = 0$ and the depth is equal to the stage ($d = h$), then the the governing equation for one-dimensional radial surface water flow is
+
+\begin{equation}
+  \frac{\partial h}{\partial t} = \frac{1}{r} \frac{\partial}{\partial r} 
+  \left (r \frac{h^{5/3}}{n \left | \frac{\partial h}{\partial r} \right |^{1/2}} 
+  \frac{\partial h}{\partial r} \right ) = 0 .
+\end{equation}
+
+\noindent For flow between two prescribed stage boundaries, with stages of $h_0$ and $h_1$ at radial distances of $r_0$ and $r_1$, respectively, the analytical solution is
+
+\begin{equation}
+  h = \left [ \left (1 - \rho \right ) h^{\frac{13}{3}}_{0} + \rho h^{\frac{13}{3}}_{1} \right ]^{\frac{3}{13}} ,
+  \label{eqn:soln_ss}
+\end{equation}
+
+\noindent where
+
+\begin{equation}
+  \rho \equiv \frac{\frac{1}{r_{0}} - \frac{1}{r}}{\frac{1}{r_{0}} - \frac{1}{r_{1}}} .
+  \label{eqn:rho_defined}
+\end{equation}
+
+Radial flow is simulated with the SWF Model using a regular grid consisting of 151 rows and 151 columns.  Radial flow is also simulated using the voronoi model grid shown in figure xxx.
 
 
 \subsection{Tilted V-Catchment}
@@ -236,7 +300,7 @@ The MODFLOW 6 SWF Model was used to simulate the tilted V-catchment problem desc
 
 The configuration of the tilted V-catchment is shown in Figure~\ref{fig:vcatch-surface}.  The left and right sides of the domain consist of sloping flat planes.  The flat planes are tilted to the south and toward the middle of the domain, forming a V-shaped catchment.  A slope of 0.05 is used for the x direction, and a slope of 0.02 is used for the y direction.  Located between the two sloping planes is a 20-m wide stream channel that slopes from north to south.  Two different Mannings roughness coefficients are used.  A value of 0.015 is assigned to the sloping planes and a value of 0.15 is assigned to the stream channel.  These values are not realistic, in that roughness coefficients are generally lower within a stream channel compared to sloping surfaces, but they were selected as a difficult test for simulating overland flow.  A zero-depth gradient boundary condition assigned as the southernmost part of the stream provides the sole outlet for the domain.
 
-\begin{figure}
+\begin{figure}[h!tbp]
 	\centering
 	\includegraphics[scale=0.75]{figures/vcatch-surface.png}
 	\caption[Configuration of the tilted v-catchment example.]{Configuration of the tilted v-catchment example.  Contours represent land surface.  A slope of 0.05 is used for the x direction, and a slope of 0.02 is used for the y direction.  A 20-m wide stream channel, shown in gray, slopes from north to south.}

@@ -1,0 +1,111 @@
+\documentclass[fleqn]{article}
+\author{MODFLOW Development Team}
+
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\graphicspath{{./figures/}}
+
+
+\begin{document}
+
+\section{A Steady-State Analytical Solution for 1D Radial Flow}
+
+If the bed is level at elevation $z = 0$, the depth is equal to the stage ($d = h$), and the governing equation in 1D radial coordinates is
+
+\begin{equation}
+  \frac{\partial h}{\partial t}
+  + \frac{1}{r} \frac{\partial}{\partial r}
+  \left (
+  \frac{r h^{\frac{5}{3}}}{n \left | \frac{\partial h}{\partial r} \right |^{\frac{1}{2}} } \frac{\partial h}{\partial r}
+  \right )
+  = 0
+  \label{eqn:radialpd}
+\end{equation}
+
+\noindent At steady state, and if $n$ is constant and $\frac{\partial h}{\partial r}$ is always negative, equation \ref{eqn:radialpd} becomes
+
+\begin{equation}
+  \frac{d}{d r}
+  \left [
+  r h^{\frac{5}{3}} \left (-\frac{d h}{d r} \right )^{\frac{1}{2}}
+  \right ]
+  = 0
+  \label{eqn:radialpd_ss} ,
+\end{equation}
+
+\noindent which can be integrated to give
+
+\begin{equation}
+  r h^{\frac{5}{3}} \left (-\frac{d h}{d r} \right )^{\frac{1}{2}}
+  = D ,
+  \label{eqn:radialpd_ss_int}
+\end{equation}
+
+\noindent where $D$ is a constant. Squaring and rearrangement of equation \ref{eqn:radialpd_ss_int} gives
+
+\begin{equation}
+  h^{\frac{10}{3}} d h = -D^{2} r^{-2} d r ,
+  \label{eqn:radialpd_ss_int_alt}
+\end{equation}
+
+\noindent which can readily be integrated between some inner radius $r_{0}$ and any given radius $r$ (where $0 < r_{0} < r$) and rearranged to give
+
+\begin{equation}
+  h^{\frac{13}{3}} - h^{\frac{13}{3}}_{0} = \frac{13}{3} D^{2} \left(\frac{1}{r} - \frac{1}{r_{0}} \right ),
+  \label{eqn:soln_ss_with_D}
+\end{equation}
+
+\noindent where $h_{0}$ is the stage specified at radius $r_{0}$. If the stage is also specified to be $h_{1}$ at radius $r_{1}$, then
+
+\begin{equation}
+  \frac{13}{3} D^{2} = \frac{h^{\frac{13}{3}}_{1} - h^{\frac{13}{3}}_{0}}{\frac{1}{r_{1}} - \frac{1}{r_{0}}},
+  \label{eqn:D_evaluated}
+\end{equation}
+
+\noindent and equation \ref{eqn:soln_ss_with_D} can be rearranged to give
+
+\begin{equation}
+  h = \left [ \left (1 - \rho \right ) h^{\frac{13}{3}}_{0} + \rho h^{\frac{13}{3}}_{1} \right ]^{\frac{3}{13}} ,
+  \label{eqn:soln_ss}
+\end{equation}
+
+\noindent where 
+
+\begin{equation}
+  \rho \equiv \frac{\frac{1}{r_{0}} - \frac{1}{r}}{\frac{1}{r_{0}} - \frac{1}{r_{1}}} .
+  \label{eqn:rho_defined}
+\end{equation}
+
+\section{A Steady-State Analytical Solution for 1D}
+
+For a hydraulically wide channel in which the wetted perimeter is equal to the bottom width, Manning's equation can be written as
+
+\begin{equation}
+  q = \frac{1}{n} h^{5/3} \left ( - \frac{dh}{dx} \right )^ {1/2}
+  \label{eqn:manning}
+\end{equation}
+
+\noindent where q is the flow [$L^2/T$] in the x direction per unit width.  For steady conditions with a know flow rate of $q$, which is constant with $x$, we can square terms and rearrange \ref{eqn:manning} to give 
+
+\begin{equation}
+  q^2 n^2 = - h^{10/3} \frac{dh}{dx}
+  \label{eqn:manning2}
+\end{equation}
+
+\noindent now integrate from $x_1$ to $x$ and from $h_1$ to $h$ to give
+
+\begin{equation}
+  q^2 n^2 (x - x_1) = - h^{13/3} + h_1^{13/3}.
+  \label{eqn:manning3}
+\end{equation}
+
+\noindent Solving for $h$ as a function of $x$ gives
+
+\begin{equation}
+  h = \left ( h_1^{13/3} - q^2 n^2 (x - x_1) \right )^{3/13}
+  \label{eqn:manning4}
+\end{equation}
+
+
+\end{document}
