@@ -218,6 +218,8 @@ A zero-depth-gradient (ZDG) boundary condition can be assigned to any reach to a
 
 \section{Integration into MODFLOW 6}
 
+The epsilon used for derivative calculation must be small.  1.D-8 was working well until we tried the one-dimensional problem with tiny cells (200,000 cells).  With 1.D-8, a floating point exception was encountered in the dot product as part of the bicgstab calculation.  When this value was reduced to 1.D-12, the program worked as expected.
+
 \section{Examples}
 
 \subsection{One-Dimensional Channel and Overland Flow}

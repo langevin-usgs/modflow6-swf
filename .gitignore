@@ -1,14 +1,15 @@
 *.pyc
 .ipynb_checkpoints/
 
-doc/swf.aux
-doc/swf.blg
-doc/swf.bbl
-doc/swf.log
-doc/swf.pdf
-doc/swf.synctex.gz
-doc/swf.toc
-doc/swf.fdb_latexmk
+doc/**/*.aux
+doc/**/*.blg
+doc/**/*.bbl
+doc/**/*.log
+doc/**/*.pdf
+doc/**/*.synctex.gz
+doc/**/*.toc
+doc/**/*.fdb_latexmk
+doc/**/*.fls
 
 examples/basin/mf6_ss_drn
 examples/basin/mf6_ss_sfr
@@ -23,3 +24,5 @@ examples/axisymmetric/swr-model/*.lst
 
 examples/radialvoronoi/mf6_*
 examples/radialstructured/mf6_*
+
+examples/one_d/mf6_*
