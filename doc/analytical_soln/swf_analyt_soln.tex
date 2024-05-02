@@ -79,24 +79,24 @@ If the bed is level at elevation $z = 0$, the depth is equal to the stage ($d = 
 
 \section{A Steady-State Analytical Solution for 1D}
 
-For a hydraulically wide channel in which the wetted perimeter is equal to the bottom width, Manning's equation can be written as
+For a hydraulically wide channel in which the wetted perimeter is equal to the bottom width and the hydraulic gradient is negative, Manning's equation can be written as
 
 \begin{equation}
   q = \frac{1}{n} h^{5/3} \left ( - \frac{dh}{dx} \right )^ {1/2}
   \label{eqn:manning}
 \end{equation}
 
-\noindent where q is the flow [$L^2/T$] in the x direction per unit width.  For steady conditions with a know flow rate of $q$, which is constant with $x$, we can square terms and rearrange \ref{eqn:manning} to give 
+\noindent where q is the flow [$L^2/T$] in the x direction per unit width.  For steady conditions with a known flow rate of $q$, which is constant with $x$, we can square terms and rearrange \ref{eqn:manning} to give 
 
 \begin{equation}
-  q^2 n^2 = - h^{10/3} \frac{dh}{dx}
+  q^2 n^2 = - h^{10/3} \frac{dh}{dx} = -\frac{3}{13} \frac{d}{dx} \left ( h^{13/3} \right )
   \label{eqn:manning2}
 \end{equation}
 
 \noindent now integrate from $x_1$ to $x$ and from $h_1$ to $h$ to give
 
 \begin{equation}
-  q^2 n^2 (x - x_1) = - \frac{13}{3} \left ( h^{13/3} + h_1^{13/3} \right ).
+  q^2 n^2 (x - x_1) = -\frac{3}{13} \left ( h^{13/3} - h_1^{13/3} \right ).
   \label{eqn:manning3}
 \end{equation}
 
@@ -107,5 +107,172 @@ For a hydraulically wide channel in which the wetted perimeter is equal to the b
   \label{eqn:manning4}
 \end{equation}
 
+\section{Unified Derivation}
+
+This is a somewhat ``unified" derivation of the four cases that come from non-radial/radial x specified-stage/specified-flow. Starting from scratch with the equations, basically following the approach in the previous section initially.
+
+\subsection{Non-Radial}
+
+For a hydraulically wide channel in which the wetted perimeter is equal to the bottom width and the hydraulic gradient is negative, Manning's equation can be written as
+
+\begin{equation}
+  q = \frac{1}{n} h^{5/3} \left ( - \frac{dh}{dx} \right )^ {1/2} ,
+  \label{eqn:manning_in_x}
+\end{equation}
+
+\noindent where q is the flow [$L^2/T$] in the $x$ direction per unit width, and then rearranged into the following form:
+
+\begin{equation}
+  h^{5/3} \left ( - \frac{dh}{dx} \right )^ {1/2} = \frac{n Q}{W} ,
+  \label{eqn:manning_in_x_alt}
+\end{equation}
+
+\noindent where $Q = q W$ is the total flow [$L^3/T$] through the uniform width of the channel, $W$ [$L$]. Squaring both sides of equation \ref{eqn:manning_in_x_alt} and rearranging gives
+
+\begin{equation}
+  h^{10/3} \frac{dh}{dx} = \frac{3}{13} \frac{d}{dx} \left ( h^{13/3} \right ) = -\left ( \frac{n Q}{W} \right )^{2}.
+  \label{eqn:manning_in_x_alt_sqrd}
+\end{equation}
+
+\noindent Under steady-state conditions, $Q$ is constant and spatially uniform. Integration of equation \ref{eqn:manning_in_x_alt_sqrd} between location $x_{1}$, at which the stage is specified to be $h_{1}$, and another location $x$, at which the stage is $h$, then gives
+
+\begin{equation}
+   h^{13/3} - h_1^{13/3} = -\frac{13}{3} \left ( \frac{n Q}{W} \right )^{2} \left (x - x_{1} \right ).
+  \label{eqn:manning_in_x_integd}
+\end{equation}
+
+If the flow $Q$ is specified, the stage at any position $x$ can be obtained by solving equation \ref{eqn:manning_in_x_integd} for $h$:
+
+\begin{equation}
+   h = \left [ h_{1}^{13/3}  + \frac{13}{3} \left ( \frac{n Q}{W} \right )^{2} \left (x_{1} - x \right ) \right ]^{3/13}.
+  \label{eqn:soln_nonradial_Q}
+\end{equation}
+
+If, instead, the stage is specified to be $h_{0}$ at a second position $x_{0}$ (presumably $< x_{1}$, although it does not have to be), then from equation \ref{eqn:manning_in_x_integd}
+
+\begin{equation}
+  -\frac{13}{3} \left ( \frac{n Q}{W} \right )^{2} = \frac{ h_{1}^{13/3} - h_{0}^{13/3}}{x_{1} - x_{0}}.
+  \label{eqn:manning_in_x_Qterm}
+\end{equation}
+
+\noindent Substitution of equation \ref{eqn:manning_in_x_Qterm} into equation \ref{eqn:soln_nonradial_Q} and rearrangement then gives
+
+\begin{equation}
+  h = \left [ \left (1 - \rho \right ) h^{\frac{13}{3}}_{0} + \rho h^{\frac{13}{3}}_{1} \right ]^{\frac{3}{13}} ,
+  \label{eqn:soln_nonradial_h0}
+\end{equation}
+
+\noindent where 
+
+\begin{equation}
+  \rho \equiv \frac{x - x_{0}}{x_{1} - x_{0}} .
+  \label{eqn:rho_in_x}
+\end{equation}
+
+In the case of specified flow, the stage $h_0$ at location $x_{0}$ can obviously be obtained by setting $x = x_{0}$ in equation \ref{eqn:soln_nonradial_Q}. In the case of specified stage $h_{0}$ at location $x_{0}$, the flow can be obtained by solving equation \ref{eqn:manning_in_x_Qterm} for $Q$:
+
+\begin{equation}
+  Q = \frac{W}{n} \left [ -\frac{3}{13} \left ( \frac{ h_{1}^{13/3} - h_{0}^{13/3}}{x_{1} - x_{0}} \right ) \right ]^{1/2}.
+  \label{eqn:manning_in_x_Q}
+\end{equation}
+
+\noindent Recall that in the non-radial case $Q/W = q$, which is uniform.
+
+\subsection{Radial}
+
+In 1D radial coordinates, equation \ref{eqn:manning_in_x} becomes
+
+\begin{equation}
+  q = \frac{1}{n} h^{5/3} \left ( - \frac{dh}{dr} \right )^ {1/2} ,
+  \label{eqn:manning_in_r}
+\end{equation}
+
+\noindent where q is the flow [$L^2/T$] in the $r$ direction per unit width (arc length) in the circumferential direction. Under steady-state conditions, the total flow $Q$ is constant and spatially uniform, and $q$ is a function of $r$ given by
+
+\begin{equation}
+  q = \frac{Q r_{1}}{W_{1}} \frac{1}{r} ,
+  \label{eqn:q_radial}
+\end{equation}
+
+\noindent where $W_{1}$ is the circumference through which $Q$ flows at radius $r_{1}$. Elimination of $q$ between equations \ref{eqn:manning_in_r} and \ref{eqn:q_radial} and rearrangement then gives
+
+\begin{equation}
+  h^{5/3} \left ( - \frac{dh}{dr} \right )^ {1/2} = \frac{n Q r_{1}}{W_{1}} \frac{1}{r}.
+  \label{eqn:manning_in_r_alt}
+\end{equation}
+
+\noindent Using a transformation of the radial coordinate,
+
+\begin{equation}
+  \zeta \equiv -\frac{r_{1}^{2}}{r} ,
+  \label{eqn:zeta_defined}
+\end{equation}
+
+\noindent so that
+
+\begin{equation}
+  \frac{d}{d r} = \frac{r_{1}^{2}}{r^{2}} \frac{d}{d \zeta} ,
+  \label{eqn:zeta_deriv}
+\end{equation}
+
+\noindent equation \ref{eqn:manning_in_r_alt} can be written as
+
+\begin{equation}
+  h^{5/3} \left ( - \frac{dh}{d \zeta} \right )^ {1/2} = \frac{n Q}{W_{1}}.
+  \label{eqn:manning_in_zeta}
+\end{equation}
+
+\noindent Note that equation \ref{eqn:manning_in_zeta} is of the same form as equation \ref{eqn:manning_in_x_alt}, with $\zeta$ replacing $x$ and $W_{1}$ replacing $W$. Therefore the solution to \ref{eqn:manning_in_zeta} is of the same form as the solution to equation \ref{eqn:manning_in_x_alt}, with $\zeta$ replacing $x$ and $W_{1}$ replacing $W$.
+
+If the flow $Q$ and the stage $h_{1}$ at position $\zeta_{1}$ are specified, the stage at any position $\zeta$ is obtained by substituting $\zeta$ for $x$ and $W_{1}$ for $W$ in equation \ref{eqn:soln_nonradial_Q}:
+
+\begin{equation}
+   h = \left [ h_{1}^{13/3}  + \frac{13}{3} \left ( \frac{n Q}{W_{1}} \right )^{2} \left (\zeta_{1} - \zeta \right ) \right ]^{3/13},
+  \label{eqn:soln_radial_Q_zeta}
+\end{equation}
+
+\noindent or, in terms of $r$,
+
+\begin{equation}
+   h = \left [ h_{1}^{13/3}  + \frac{13}{3} \left ( \frac{n Q r_{1}}{W_{1}} \right )^{2} \left (\frac{1}{r} - \frac{1}{r_{1}} \right ) \right ]^{3/13},
+  \label{eqn:soln_radial_Q}
+\end{equation}
+
+If, instead of $Q$, the stage is specified to be $h_{0}$ at a second position $\zeta_{0}$, then from equation \ref{eqn:soln_nonradial_h0} and equation \ref{eqn:rho_in_x} with $\zeta$ substituted for $x$  and $W_{1}$ substituted for $W$,
+
+\begin{equation}
+  h = \left [ \left (1 - \rho \right ) h^{\frac{13}{3}}_{0} + \rho h^{\frac{13}{3}}_{1} \right ]^{\frac{3}{13}} ,
+  \label{eqn:soln_radial_h0}
+\end{equation}
+
+\noindent where 
+
+\begin{equation}
+  \rho \equiv \frac{\zeta - \zeta_{0}}{\zeta_{1} - \zeta_{0}} ,
+  \label{eqn:rho_in_zeta}
+\end{equation}
+
+\noindent or, in terms of $r$,
+
+\begin{equation}
+  \rho \equiv \frac{\frac{1}{r_{0}} - \frac{1}{r}}{\frac{1}{r_{0}} - \frac{1}{r_{1}}} .
+  \label{eqn:rho_in_r}
+\end{equation}
+
+In the case of specified flow, the stage $h_0$ at location $r_{0}$ can obviously be obtained by setting $r = r_{0}$ in equation \ref{eqn:soln_radial_Q}. In the case of specified stage $h_{0}$ at location $x_{0}$, the flow can be obtained by substituting $\zeta$ for $x$ and $W_{1}$ for $W$ in equation \ref{eqn:manning_in_x_Q}:
+
+\begin{equation}
+  Q = \frac{W_{1}}{n} \left [ -\frac{3}{13} \left ( \frac{ h_{1}^{13/3} - h_{0}^{13/3}}{\zeta_{1} - \zeta_{0}} \right ) \right ]^{1/2},
+  \label{eqn:manning_in_zeta_Q}
+\end{equation}
+
+\noindent or, in terms or $r$,
+
+\begin{equation}
+  Q = \frac{W_{1}}{n r_{1}} \left [\frac{3}{13} \left ( \frac{ h_{0}^{13/3} - h_{1}^{13/3}}{\frac{1}{r_{0}} -\frac{1}{r_{1}}} \right ) \right ]^{1/2}.
+  \label{eqn:manning_in_zeta_Q}
+\end{equation}
+
+\noindent Note that $W_{1} / r_{1}$ can equivalently be expressed as $W_{0} / r_{0}$. Also, $Q/W_{1} = q_{1}$, the flow per unit arc length at radius $r_{1}$, and $Q/W_{0} = q_{0}$, the flow per unit arc length at radius $r_{0}$.
 
 \end{document}
