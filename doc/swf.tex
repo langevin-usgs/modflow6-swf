@@ -222,21 +222,30 @@ The epsilon used for derivative calculation must be small.  1.D-8 was working we
 
 \section{Examples}
 
-\subsection{One-Dimensional Channel and Overland Flow}
+% Ideally, each example should be written up following a similar template.  A possible template is
 % background
-One-dimensional surface water flow represented using the diffusive wave approximation is subject to the following governing equation
+% purpose of the test
+% expectation
+% problem description
+% results
+
+\subsection{One-Dimensional Channel and Overland Flow}
+
+% background
+To ensure that numerical models are working properly, results from numerical simulations are commonly compared with results from an analytical solution.  To demonstrate and test the SWF Model, an analytical solution was developed for simple one-dimensional steady flow.  An analytical solution can be obtained for the following mathematical governing equation
 
 \begin{equation}
   \frac{\partial h}{\partial t} = \frac{\partial}{\partial x} 
   \left ( \frac{h^{5/3}}{n \left | \frac{\partial h}{\partial x} \right |^{1/2}} 
   \frac{\partial h}{\partial x} \right ) = 0 .
+  \label{eqn:gov_1d}
 \end{equation}
 
-\noindent For flow between two prescribed stage boundaries, with stages of $h_0$ and $h_1$ at x locations of $x_0$ and $x_1$, respectively, the analytical solution is
+\noindent Equation~\ref{eqn:gov_1d} describes flow for a hydraulically wide rectangular channel, in which the wetted perimeter is equal to the channel width, and the bottom is flat with an elevation of zero.  Under these conditions, the water surface elevation $h$ is equal to the water depth $d$.  For flow between two locations, $x_0$ and $x_1$, with prescribed stages of $h_0$ and $h_1$, respectively, the analytical solution for $h$ as a function of $x$ is
 
 \begin{equation}
   h = \left [ \left (1 - \rho \right ) h^{\frac{13}{3}}_{0} + \rho h^{\frac{13}{3}}_{1} \right ]^{\frac{3}{13}} ,
-  \label{eqn:soln_ss}
+  \label{eqn:asoln_1d}
 \end{equation}
 
 \noindent where
@@ -246,22 +255,39 @@ One-dimensional surface water flow represented using the diffusive wave approxim
   \label{eqn:rho_defined_x}
 \end{equation}
 
-% purpose
-The purpose of this example is to show a comparison of the SWR Model with the analytical solution. 
+\noindent Equation~\ref{eqn:asoln_1d} can be solved easily to produce steady channel stage profiles for comparison with model results.
 
-% expectation
-Results from the SWR Model should be in close agreement with the analytical solution.  Slight differences between the staged simulated by SWF and those calculated by the analytical solution are expected, however, due to upstream weighting in the numerical implementation.
+Under these conditions the flow rate $Q$ can be calculated as
+
+\begin{equation}
+  Q = \frac{1}{n} \left ( 
+    \frac{3}{13}
+    \frac{h^{\frac{13}{3}}_{0} - h^{\frac{13}{3}}_{1}}{x_1 - x_0}
+  \right )^{1/2}.
+  \label{eqn:q_calc}
+\end{equation}
+
+
+% purpose and expectation
+In this example, a simple one-dimensional numerical model is used to simulate flow and the water surface profile between two prescribed stage boundaries.  Results from the numerical model should be in agreement with the analytical solution.  Some minor differences are expected due to upstream weighting and discretization errors in the numerical model.  These differences between the numerical model and the analytical solution should decrease with increases in model grid resolution.
 
 %problem description
-One dimensional flow is simulated using two different appraoches.  The DISV1D discretization is used for the first approach, whereas the DIS2D discretization, with a single row, is used for the second approach.
+One dimensional steady flow is simulated using two different approaches.  The DISV1D discretization is used for the first approach to represent flow in a channel.  The DIS2D discretization, with a single row, is used to represent flow in overland conditions.  In this example, a model domain extending 110 km in the x direction is divided into 501 cells.  Prescribed stage conditions are assigned to the first and last cells.  A stage value of 10.0 m is assigned to the first cell and a value of 1.0 m is assigned to the last cell.  Steady conditions are solved using a stage tolerance of $10^{-8}$ m.
 
 %results
+The comparison between the analytical solution (equation~\ref{eqn:asoln_1d}) and the channel and overland flow models are shown in figure~\ref{fig:oned-results}.  The upper plot shows the stage profile (for every tenth point) and the close agreeement between the analytical and numerical solutions.  Although there is good agreement between the numerical models and the analytical solution, the lower plot shows that maximum errors between the models and the analytical solution are about 0.4 m.  This error in the numerical models is due to spatial discretization.  An increase in spatial resolution results in a better match with the analytical solution.  Using equation~\ref{eqn:q_calc} the flow under these conditions is 0.212805 $m^3/s$.  The simulated flow for the channel and overland models is in error by about 0.3 percent. Simulated flow for the channel and overland models 0.213465 and 0.213428 $m^3/s$, respectively.  
+
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[scale=1.0]{figures/oned.png}
+	\caption[Results for one-dimensional flow.]{Results for one-dimensional flow.  Two different Surface Water Flow (SWF) Models are shown.  The channel model represents flow using the one-dimensional DISV1D discretization.  The overland model represents flow using the two-dimensional DIS2D discretization with a single row.}
+	\label{fig:oned-results}
+\end{figure}
+
 
 \subsection{Axisymmetric Overland Flow}
 
 The axisymmetric flopy problem developed by~\cite{lal2001}, and used by~\cite{hughes2015} to test the SWR Process for MODFLOW-2005, is used to test the SWF Model for MODFLOW 6.  The problem is based on the transient decay of a circular mound of surface water.
-
-
 
 \begin{figure}[h!tbp]
 	\centering
@@ -271,7 +297,7 @@ The axisymmetric flopy problem developed by~\cite{lal2001}, and used by~\cite{hu
 \end{figure}
 
 \subsection{Radial Flow}
-If the bed is level at elevation $z = 0$ and the depth is equal to the stage ($d = h$), then the the governing equation for one-dimensional radial surface water flow is
+If the bed is level at elevation $z = 0$ and the depth is equal to the stage ($d = h$), then the governing equation for one-dimensional radial surface water flow is
 
 \begin{equation}
   \frac{\partial h}{\partial t} = \frac{1}{r} \frac{\partial}{\partial r} 
