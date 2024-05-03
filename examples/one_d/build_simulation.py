@@ -14,6 +14,7 @@ def build_simulation(
     dev_swr_conductance,
     central_in_space,
     save_velocity,
+    Q0=None,
 ):
     ncol = nreach
     nper = 1
@@ -135,18 +136,36 @@ def build_simulation(
             ],
         )
 
-        # Assign constant heads in first and last reach.
+        # Assign constant heads.
         if dis_type == "dis2d":
-            spd = [(0, 0, h0), (0, ncol - 1, h1)]
+            chd_spd = [(0, ncol - 1, h1)]
+            if Q0 is None:
+                chd_spd.append((0, 0, h0))
         elif dis_type == "disv1d":
-            spd = [(0, h0), (nodes - 1, h1)]
+            chd_spd = [(nodes - 1, h1)]
+            if Q0 is None:
+                chd_spd.append((0, h0))
         _ = flopy.mf6.ModflowSwfchd(
             swf,
-            maxbound=len(spd),
+            maxbound=len(chd_spd),
             print_input=True,
             print_flows=True,
-            stress_period_data=spd,
+            stress_period_data=chd_spd,
         )
+
+        # Assign inflow.
+        if Q0 is not None:
+            if dis_type == "dis2d":
+                flw_spd = [(0, 0, Q0)]
+            elif dis_type == "disv1d":
+                flw_spd = [(0, Q0)]
+            _ = flopy.mf6.ModflowSwfflw(
+                swf,
+                maxbound=len(flw_spd),
+                print_input=True,
+                print_flows=True,
+                stress_period_data=flw_spd,
+            )
 
     swfname = "overland"
     add_model(sim, swfname, dis_type="dis2d")
@@ -272,6 +291,36 @@ def make_plot(sim, x, h_analytical_solution, extent, istep, symbols=None):
         ax.set_xlabel("X-location, in meters")
         ax.set_ylabel("Error, in meters")
 
-
-
     return fig, ax
+
+
+def print_flow_comparison(sim, q_analytical):
+    sim_ws = sim.simulation_data.mfpath.get_sim_path()
+    for modelname in ["channel", "overland"]:
+        distype = "dis2d" if modelname == "overland" else "disv1d"
+        fpth = sim_ws / f"{modelname}.{distype}.grb"
+        if not fpth.exists():
+            continue
+
+        grb = flopy.mf6.utils.MfGrdFile(fpth)
+        ia = grb.ia
+        ja = grb.ja
+
+        fpth = sim_ws / f"{modelname}.bud"
+        bud_obj = flopy.utils.CellBudgetFile(fpth)
+        flowja = bud_obj.get_data(text="FLOW-JA-FACE")[0].flatten()
+
+        nodes = ia.shape[0] - 2
+        flow_right_face = np.zeros(nodes)
+        for n in range(ia.shape[0] - 1):
+            for ipos in range(ia[n] + 1, ia[n + 1]):
+                m = ja[ipos]
+                if m > n:
+                    flow_right_face[n] = -flowja[ipos]
+        
+        q_mean = flow_right_face.mean()
+        q_error = (q_mean - q_analytical) / q_analytical
+        print(modelname, " model:")
+        print(f"  simulated mean q: {q_mean}")
+        print(f"  error (sim - analytical) / analytical: {q_error}")
+
