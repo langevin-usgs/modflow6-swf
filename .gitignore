@@ -5,11 +5,12 @@ doc/**/*.aux
 doc/**/*.blg
 doc/**/*.bbl
 doc/**/*.log
-doc/**/*.pdf
 doc/**/*.synctex.gz
 doc/**/*.toc
 doc/**/*.fdb_latexmk
 doc/**/*.fls
+doc/*.pdf
+doc/analytical_soln/*.pdf
 
 examples/basin/mf6_ss_drn
 examples/basin/mf6_ss_sfr

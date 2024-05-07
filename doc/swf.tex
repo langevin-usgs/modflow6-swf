@@ -220,6 +220,7 @@ A zero-depth-gradient (ZDG) boundary condition can be assigned to any reach to a
 
 The epsilon used for derivative calculation must be small.  1.D-8 was working well until we tried the one-dimensional problem with tiny cells (200,000 cells).  With 1.D-8, a floating point exception was encountered in the dot product as part of the bicgstab calculation.  When this value was reduced to 1.D-12, the program worked as expected.
 
+\newpage
 \section{Examples}
 
 % Ideally, each example should be written up following a similar template.  A possible template is
@@ -229,7 +230,7 @@ The epsilon used for derivative calculation must be small.  1.D-8 was working we
 % problem description
 % results
 
-\subsection{One-Dimensional Channel and Overland Flow}
+\subsection{Steady One-Dimensional Flow}
 
 % background
 To ensure that numerical models are working properly, results from numerical simulations are commonly compared with results from an analytical solution.  To demonstrate and test the SWF Model, an analytical solution was developed for simple one-dimensional steady flow.  An analytical solution can be obtained for the following mathematical governing equation
@@ -284,7 +285,72 @@ The comparison between the analytical solution (equation~\ref{eqn:asoln_1d}) and
 	\label{fig:oned-results}
 \end{figure}
 
+\newpage
+\subsection{Steady Radial Flow}
 
+% background
+To further demonstrate and test the SWF Model, an analytical solution was also developed for steady one-dimensional radial flow.  Following the previous example, if the bed is level at elevation $z = 0$ and the depth is equal to the stage ($d = h$), then the governing equation for one-dimensional radial surface water flow is
+
+\begin{equation}
+  \frac{\partial h}{\partial t} = \frac{1}{r} \frac{\partial}{\partial r} 
+  \left (r \frac{h^{5/3}}{n \left | \frac{\partial h}{\partial r} \right |^{1/2}} 
+  \frac{\partial h}{\partial r} \right ) = 0 .
+\end{equation}
+
+\noindent For flow between two prescribed stage boundaries, with stages of $h_0$ and $h_1$ at radial distances of $r_0$ and $r_1$, respectively, the analytical solution for $h$ as a function of radial distance $r$ is
+
+\begin{equation}
+  h = \left [ \left (1 - \rho \right ) h^{\frac{13}{3}}_{0} + \rho h^{\frac{13}{3}}_{1} \right ]^{\frac{3}{13}} ,
+  \label{eqn:radial-flow-analytical}
+\end{equation}
+
+\noindent where
+
+\begin{equation}
+  \rho \equiv \frac{\frac{1}{r_{0}} - \frac{1}{r}}{\frac{1}{r_{0}} - \frac{1}{r_{1}}} .
+  \label{eqn:rho_defined}
+\end{equation}
+
+% purpose and expectation
+In this example, two different model grids are used to simulate steady overland flow and the water surface profile between two prescribed stage boundaries.  Results from the numerical models should be in agreement with the analytical solution.  Some minor differences are expected due to upstream weighting and discretization errors in the numerical model.
+
+%problem description
+A structured two-dimensional model grid is represented using the DIS2D discretization package (figure~\ref{fig:oned-structured-grid}).  The DIS2D grid consistes of 151 rows and 151 columns.  Constant heads are assigned to the group of nine model cells in the middle of the domain and around the perimeter of the domain.  The constant head values are calculated using the analytical solution for radial flow (equation \ref{eqn:radial-flow-analytical}).
+
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[scale=0.70]{figures/oned-structured-grid.pdf}
+	\caption[Structured model grid used to simulate radial flow.]{Structured model grid used to simulate radial flow.  Grid consists of 151 rows and 151 columns.  The model domain spans 162,000 meters in both the x and y directions.  Constant head cells are shown in blue.  Head values for the constant head cells are calculated using the radial flow analytical solution (equation \ref{eqn:radial-flow-analytical}).}
+	\label{fig:oned-structured-grid}
+\end{figure}
+
+A voronoi model grid, represented using the DISV2D discretization package, is also used to simulate radial overland flow (figure~\ref{fig:oned-voronoi-grid}).  The voronoi model grid was constructed using an inner radius of 5000 m and an outer radius of 80,000 m.  Cells within the gridded domain are no larger than $(5000 m)^2$ in area.  Constant heads are assigned to the ring of innermost cells and outmost cells.  Head values for the constant head cells are calculated using the radial flow analytical solution (equation \ref{eqn:radial-flow-analytical}).
+
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[scale=0.70]{figures/oned-voronoi-grid.pdf}
+	\caption[Voronoi unstructured model grid used to simulate radial flow.]{Voronoi unstructured model grid used to simulate radial flow.  Grid consists of 2392 model cells and 6169 vertices.  The radius of the inner circle is 5000 meters, and the radius of the outer circle is 80,000 meters.  Constant head cells, shown in blue, are assigned to the innermost cells and the outermost cells.  Head values for the constant head cells are calculated using the radial flow analytical solution.}
+	\label{fig:oned-voronoi-grid}
+\end{figure}
+
+%results
+The comparison between the analytical solution (equation~\ref{eqn:radial-flow-analytical}) and the simulation with the structured model grid is shown in figure~\ref{fig:oned-structured-results}.  The comparison between the analytical solution (equation~\ref{eqn:radial-flow-analytical}) and the simulation with the voronoi model grid is shown in figure~\ref{fig:oned-voronoi-results}.  In both cases, the simulation results are in good agreement with the analytical solution.
+
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[scale=0.9]{figures/oned-structured-results.pdf}
+	\caption[Simulation results from the structured grid model.]{Simulation results from the structured grid model.  Black dotted contours are for the numerical model and the red solid contours are for the analytical solution.  The contour interval is 0.2 meters.}
+	\label{fig:oned-structured-results}
+\end{figure}
+
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[scale=0.9]{figures/oned-voronoi-results.pdf}
+	\caption[Simulation results from the voronoi grid model.]{Simulation results from the voronoi grid model.  Black dotted contours are for the numerical model and the red solid contours are for the analytical solution.  The contour interval is 1.0 meters.}
+	\label{fig:oned-voronoi-results}
+\end{figure}
+
+\newpage
 \subsection{Axisymmetric Overland Flow}
 
 The axisymmetric flopy problem developed by~\cite{lal2001}, and used by~\cite{hughes2015} to test the SWR Process for MODFLOW-2005, is used to test the SWF Model for MODFLOW 6.  The problem is based on the transient decay of a circular mound of surface water.
@@ -296,32 +362,7 @@ The axisymmetric flopy problem developed by~\cite{lal2001}, and used by~\cite{hu
 	\label{fig:axi-results}
 \end{figure}
 
-\subsection{Radial Flow}
-If the bed is level at elevation $z = 0$ and the depth is equal to the stage ($d = h$), then the governing equation for one-dimensional radial surface water flow is
-
-\begin{equation}
-  \frac{\partial h}{\partial t} = \frac{1}{r} \frac{\partial}{\partial r} 
-  \left (r \frac{h^{5/3}}{n \left | \frac{\partial h}{\partial r} \right |^{1/2}} 
-  \frac{\partial h}{\partial r} \right ) = 0 .
-\end{equation}
-
-\noindent For flow between two prescribed stage boundaries, with stages of $h_0$ and $h_1$ at radial distances of $r_0$ and $r_1$, respectively, the analytical solution is
-
-\begin{equation}
-  h = \left [ \left (1 - \rho \right ) h^{\frac{13}{3}}_{0} + \rho h^{\frac{13}{3}}_{1} \right ]^{\frac{3}{13}} ,
-  \label{eqn:soln_ss}
-\end{equation}
-
-\noindent where
-
-\begin{equation}
-  \rho \equiv \frac{\frac{1}{r_{0}} - \frac{1}{r}}{\frac{1}{r_{0}} - \frac{1}{r_{1}}} .
-  \label{eqn:rho_defined}
-\end{equation}
-
-Radial flow is simulated with the SWF Model using a regular grid consisting of 151 rows and 151 columns.  Radial flow is also simulated using the voronoi model grid shown in figure xxx.
-
-
+\newpage
 \subsection{Tilted V-Catchment}
 
 The MODFLOW 6 SWF Model was used to simulate the tilted V-catchment problem described by \cite{digiammarco1996}.  This tilted V-catchment problem has been used by~\cite{VanderKwaak1999},~\cite{panday2004} and by~\cite{hughes2015}, for example, to test numerical models of two-dimensional overland in response to a rainfall event.
