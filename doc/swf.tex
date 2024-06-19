@@ -94,15 +94,93 @@ Two-dimensional overland flow can be represented using either the regular struct
 For DIS2D grids, stage calculation points are located in the center of the model cell.  For DISV2D grids, stage calculation points are assigned by the user; they should generally be located in the center of the cell, but there is flexibility to adjust them spatially to better represent precise boundary locations.  By default, the model domain boundary represents no-flow conditions.  Outflow conditions must be activated by assigning a stress package to the desired locations.
 
 \subsection{Internal Flows Between Cells}
-Flows between cells are called ``internal flows.'' Mathematical expressions for internal flows are discrete forms of Manning's equation. Under certain conditions, which are discussed later in this chapter, the flow between two cells can be expressed accurately as the product of a hydraulic conductance and difference in water surface elevation between the two cells. This is called the ``conductance-based'' flow expression.
-
-To simplify the following development, flows are considered positive if they are entering cell $n$. Following these conventions, flow into cell $n$ from cell $m$ is given by Manning's equation as
+Flows between cells are called ``internal flows.'' Internal flows between cells are calculated using Manning's equation.  The following is a general expression for Manning's equation:
 
 \begin{equation}
-  Q = \frac{1}{n} A R^{\frac{2}{3}} \sqrt{S_f}
+  Q = \frac{1}{n} A R^{\frac{2}{3}} \sqrt{S_f},
 \end{equation}
 
 \noindent where $R$ is the hydraulic radius ($L$) equal to the flow area divided by the wetted perimeter, and $S_f$ is the water surface slope (dimensionless). 
+
+For the numerical implementation in MODFLOW we express Manning's equation as a product of a conductance term and the head difference between reach $n$ and $m$:
+
+\begin{equation}
+  Q_{nm} = \overline{C}_{nm} \left ( h_m - h_n \right ).
+\end{equation}
+
+\noindent The conductance-based flow expression allows individual cell conductances to be calculated for each of the two connected reaches and then averaged together to give a representative conductance for the connection.  The representative conductance between reach $n$ and reach $m$ ($\overline{C}_{nm}$) is calculated by averaging a conductance for reach $n$ with a conductance for reach $m$.  The conductance for reach $n$, denoted by $C_{mn}$ ($L^2/T$), is calculated over the distance from the stage calculation point of $n$ to its shared face with cell $m$.  Likewise, the conductance for reach $m$, over the distance between the stage calculation point for $m$ and its shared face with cell $n$ is denoted by $C_{mn}$ and also has dimensions of $L^2/T$.
+
+The average conductance between reach $n$ and reach $m$ is calculated using the harmonic mean of $C_{nm}$ and $C_{mn}$ to give
+
+\begin{equation}
+  \overline{C}_{nm} = \frac{C_{nm}  C_{mn}}{C_{nm} + C_{mn}}.
+\end{equation}
+
+\noindent The harmonic mean preferentially weights the average toward the lower of the two values and is based on piecewise constant reach properties that may change abruptly at the face between different reaches.
+
+The conductance for reach $n$ in the $m$ direction ($C_{nm}$) can be expressed as
+
+\begin{equation}
+  C_{mn} = 
+  \frac{
+  A_n 
+  R_{n}^{\frac{2}{3}}
+  }
+  {n_n
+  L_{nm}
+  \sqrt{| \gamma_n |}
+  },
+\label{eqn:cn}
+\end{equation}
+
+\noindent where $A_n$ is the cross-sectional flow area ($L^2$) for reach $n$ calculated as a function of the water depth, $R_n$ is the hydraulic radius ($L$) for reach $n$, which is the cross-sectional flow area divided by the wetted perimeter, calculated as a function of the water depth, $n_n$ is the Manning's roughness coefficient ($T/L^{\frac{1}{3}}$) for reach $n$,  $L_{nm}$ is the distance ($L$) from the stage calculation point in cell $n$ to the shared edge with reach $m$, and $\gamma_n$ is the hydraulic gradient ($L^0$) for reach $n$.
+
+Several of the terms in equation \ref{eqn:cn} are combined into a single term for reach $n$ called channel conveyance ($\kappa_n$), which is defined as
+
+\begin{equation}
+  \kappa_n = \frac{A_n R_n^{\frac{2}{3}}}{n_n}.
+\label{eqn:conveyance}
+\end{equation}
+
+\noindent Channel conveyance for reach $n$ is calculated as a function of an upstream-weighted water depth.  Thus, channel conveyance for reach $n$ can be written as
+
+\begin{equation}
+  \kappa_n = \frac{A_n (d_u) R_n (d_u) ^{\frac{2}{3}}}{n_n},
+\label{eqn:conveyancedu}
+\end{equation}
+
+\noindent where the $A_n$ and $R_n$ terms include $(d_u)$ to indicate that they are calculated as a function of $d_u$.  $d_u$ is assigned to the depth of the reach (either from cell $n$ or cell $m$) with the higher stage:
+
+\[
+d_u = 
+\begin{cases}
+  d_n & \text{if $h_n>h_m$} \\
+  d_m & \text{otherwise}
+\end{cases}.
+\]
+
+With this definition for channel conveyance, equation \ref{eqn:cn} can be simplified as
+
+\begin{equation}
+  C_{nm} = 
+  \frac{
+  \kappa_n 
+  }
+  {
+  L_{nm}
+  \sqrt{| \gamma_n |}
+  },
+\label{eqn:cn2}
+\end{equation}
+
+Channel conveyance is calculated in several different ways depending on how a cross section is defined for a reach.  For the cross sections shown in figure \ref{fig:cxs} a single Manning's roughness coefficient is assigned for the entire section.  If a single Manning's roughness coefficient is used to define the entire section for reach $n$, then the channel conveyance is calculated according to equation \ref{eqn:conveyance}.  If a cross section does not have a constant Manning's roughness coefficient for all line segments that define the channel, as shown for example in Figure \ref{fig:cxs_rough}, then a composite conveyance is calculated by summing the individual conveyance parts for the channel as
+
+\begin{equation}
+  \kappa_n = \sum_{i=1}^{NLS} \frac{A_{n,i} \left ( \frac {A_{n,i}}{P_{n,i}}\right )^{\frac{2}{3}}}{n_{n,i}},
+\end{equation}
+
+\noindent where $NLS$ is the number of line segments used to define the channel cross section.
+
 
 \subsection{External Source and Sink Flow}
 
@@ -119,122 +197,6 @@ A general control-volume finite-difference (CVFD) equation can be written as
 
 \subsection{Channel Cross Sections}
 
-\section{Numerical Solution}
-
-\subsection{Newton-Raphson Method}
-
-Flow throughout the connected channel network is based on a Newton-Raphson formulation, in which the following equation is formulated and solved simultaneously for each reach \textcolor{red}{change n and m to i and j?}
-
-\begin{equation}
-\label{eqn:nr-cvfd}
-\begin{split}
-\left ( \sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_n} + \frac{\partial Q_{n,s}}{\partial h_n} - \frac{\partial Q_{STO}}{\partial h_n} \right ) h^k_n + 
-\sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_m} h^k_{m} = \\
-- \left ( \sum\limits_{m \in \eta_{n}} Q_{n,m} + Q_{n,s} - Q_{STO} \right ) + \\
-\left ( \sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_n} + \frac{\partial Q_{n,s}}{\partial h_n} - \frac{\partial Q_{STO}}{\partial h_n} \right ) h^{k-1}_n + \sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_m} h^{k-1}_{m}.
-\end{split}
-\end{equation}
-
-\subsection{Discretized Flow Expression}
-
-Manning's equation is written as
-
-\begin{equation}
-  Q = \frac{1}{n} A R^{\frac{2}{3}} \sqrt{S_f}
-\end{equation}
-
-\noindent where $R$ is the hydraulic radius equal to $A / P$.  For the numerical implementation in MODFLOW we express Manning's equation as a product of a conductance term and the head difference between reach $n$ and $m$:
-
-\begin{equation}
-  Q_{nm} = C_{nm} \left ( h_m - h_n \right ).
-\end{equation}
-
-\noindent The conductance-based flow expression was selected so that individual conductances can be calculated for two connected reaches and then averaged together to give the conductance for the connection.  The average conductance between reach $n$ and reach $m$ ($C_{nm}$) is calculated by averaging a conductance for reach $n$ with a conductance for reach $m$.  The conductance for reach $n$, from the stage calculation point to the shared face with reach $m$, is denoted by $C_{n \rightarrow | m}$ and has dimensions of $L^2/T$.  The conductance for reach $m$, in the direction of reach $n$, is denoted by $C_{m \rightarrow | n}$ and also has dimensions of $L^2/T$.
-
-The average conductance between reach $n$ and reach $m$ is calculated using the harmonic mean of $C_{n \rightarrow | m}$ and $C_{m \rightarrow | n}$ to give
-
-\begin{equation}
-  C_{nm} = \frac{C_{n \rightarrow | m}  C_{m \rightarrow | n}}{C_{n \rightarrow | m} + C_{m \rightarrow | n}}.
-\end{equation}
-
-\noindent The harmonic mean preferentially weights the average toward the lower of the two values and is based on piecewise constant reach properties that may change abruptly at the face between different reaches.
-
-The conductance for reach $n$ in the $m$ direction ($C_{n \rightarrow | m}$) can be expressed as
-
-\begin{equation}
-  C_{n \rightarrow | m} = 
-  \frac{
-  A_n 
-  R_{n}^{\frac{2}{3}}
-  }
-  {n_n
-  L_{n \rightarrow | m}
-  \sqrt{| \gamma_n |}
-  },
-\label{eqn:cn}
-\end{equation}
-
-
-%\begin{equation}
-%  C_{n \rightarrow | m} = 
-% \frac{A_n R_{n}^{\frac{2}{3}}}{n_n}
-% \frac{1}{L_{n \rightarrow | m}}
-% \frac{1}{ \sqrt{ \frac{ | \left ( h_m - h_n \right ) | } {L_{nm}}} }
-%  \frac{1}{\sqrt{| \gamma_n |}}
-%\end{equation}
-
-%\begin{equation}
-%  C_{n \rightarrow | m} = \frac{B_n}{ L_{nm} \sqrt{ \frac{ | \left ( h_m - h_n \right ) | } {L_{nm}}} }
-%\end{equation}
-
-\noindent where $A_n$ is the cross-sectional flow area ($L^2$) for reach $n$ calculated as a function of the water depth, $R_n$ is the hydraulic radius ($L$) for reach $n$, which is the cross-sectional flow area divided by the wetted perimeter, calculated as a function of the water depth, $n_n$ is the Manning's roughness coefficient ($T/L^{\frac{1}{3}}$) for reach $n$,  $L_{n \rightarrow | m}$ is the distance ($L$) from the stage calculation point to the shared edge between reach $n$ and $m$, and $\gamma_n$ is the hydraulic gradient ($L^0$) for reach $n$.
-
-Several of the terms in equation \ref{eqn:cn} are combined into a single term for reach $n$ called channel conveyance ($B_n$), which is defined as
-
-\begin{equation}
-  B_n = \frac{A_n R_n^{\frac{2}{3}}}{n_n}.
-\label{eqn:conveyance}
-\end{equation}
-
-\noindent Channel conveyance for reach $n$ is calculated as a function of an upstream-weighted water depth.  Thus, channel conveyance for reach $n$ can be written as
-
-\begin{equation}
-  B_n = \frac{A_n (d_u) R_n (d_u) ^{\frac{2}{3}}}{n_n},
-\label{eqn:conveyancedu}
-\end{equation}
-
-\noindent where the $A_n$ and $R_n$ terms include $(d_u)$ to indicate that they are calculated as a function of $d_u$.  $d_u$ is assigned to the depth of the reach (either $n$ or $m$) with the higher stage:
-
-\[
-d_u = 
-\begin{cases}
-  d_n & \text{if $h_n>h_m$} \\
-  d_m & \text{otherwise}
-\end{cases}.
-\]
-
-With this definition for channel conveyance, equation \ref{eqn:cn} can be simplified as
-
-\begin{equation}
-  C_{n \rightarrow | m} = 
-  \frac{
-  B_n 
-  }
-  {
-  L_{n \rightarrow | m}
-  \sqrt{| \gamma_n |}
-  },
-\label{eqn:cn2}
-\end{equation}
-
-Channel conveyance is calculated in several different ways depending on how a cross section is defined for a reach.  For the cross sections shown in figure \ref{fig:cxs} a single Manning's roughness coefficient is assigned for the entire section.  If a single Manning's roughness coefficient is used to define the entire section for reach $n$, then the channel conveyance is calculated according to equation \ref{eqn:conveyance}.  If a cross section does not have a constant Manning's roughness coefficient for all line segments that define the channel, as shown for example in Figure \ref{fig:cxs_rough}, then a composite conveyance is calculated by summing the individual conveyance parts for the channel as
-
-\begin{equation}
-  B_n = \sum_{i=1}^{NLS} \frac{A_{n,i} \left ( \frac {A_{n,i}}{P_{n,i}}\right )^{\frac{2}{3}}}{n_{n,i}},
-\end{equation}
-
-\noindent where $NLS$ is the number of line segments used to define the channel cross section.
-
 % This figure below is for the case where roughness is the same for every line segment in the cross section 
 \begin{figure}[h!tbp]
 	\centering
@@ -250,6 +212,42 @@ Channel conveyance is calculated in several different ways depending on how a cr
 	\caption[Schematic showing different types of channel cross sections with variable roughness.]{Schematic showing different types of cross sections with variable Manning's roughness coefficient: (a) a rectangular cross section defined using four points, and (b) a trapezoidal cross section defined using four points.  The Manning's roughness coefficient is varies by line segment.  If the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
 	\label{fig:cxs_rough}
 \end{figure}
+
+\subsection{Aquifer Interaction}
+
+The SWF Model can be connected to an underlying Groundwater Flow (GWF) Model using a SWF-GWF Exchange.  The flow between the SWF and GWF Models is calculated based on the following expression for flow,
+
+\begin{equation}
+  Q_{n,m} = s_{n} A_{n,m} \acute{K}_{n,m} (h_m - h_n),
+\end{equation}
+
+\noindent where $Q_{n,m}$ is the volumetric flow rate between a surface water cell $n$ and a groundwater model cell $m$ in $L^{3}$T$^{-1}$, $s_n$ is a quadratic smoothing factor that ranges from zero when the surface water depth is zero to a value of one when the surface water depth is greater than or equal to a small fixed depth (presently set as $10^{-6}$), $A_{n,m}$ is the interaction area for flow ($L^2$), $\acute{K}_{n,m}$ is the leakance ($T^{-1}$) of the bed sediments calculated as the hydraulic conductivity of the bed sediments divided the thickness of the bed sediments, and $h_n$ and $h_m$ are the water surface elevation and groundwater head of the surface water cell and groundwater cell, respectively.
+
+The interaction area for flow $A_{n,m}$ is defined differently for channel cells than for overland flow cells.  For channel cells, the interaction area is defined as
+
+\begin{equation}
+  A_{n,m} = L_{n,m} P_{up},
+\end{equation}
+
+\noindent where $L_{n,m}$ is the length ($L$) of channel $n$ overlying groundwater model cell $m$, and $P_{up}$ is the upstream-weighted wetted perimeter of the channel ($L$) calculated using either $h_n$ or $h_m$, whichever is greater.
+
+For overland flow cells, the interaction area corresponds to the overlapping surface area between the overland flow model cell and the underlying groundwater flow model cell.  This area is provided as input by the user.  If the overland flow model grid in plan view is the same as the groundwater flow model grid, then the interaction area is simply the area of the cell; however, it is possible to use a different grid and so the interaction area must be provided by the user.
+
+\section{Numerical Solution}
+
+\subsection{Newton-Raphson Method}
+
+Flow throughout the connected channel network is based on a Newton-Raphson formulation, in which the following equation is formulated and solved simultaneously for each reach \textcolor{red}{change n and m to i and j?}
+
+\begin{equation}
+\label{eqn:nr-cvfd}
+\begin{split}
+\left ( \sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_n} + \frac{\partial Q_{n,s}}{\partial h_n} - \frac{\partial Q_{STO}}{\partial h_n} \right ) h^k_n + 
+\sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_m} h^k_{m} = \\
+- \left ( \sum\limits_{m \in \eta_{n}} Q_{n,m} + Q_{n,s} - Q_{STO} \right ) + \\
+\left ( \sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_n} + \frac{\partial Q_{n,s}}{\partial h_n} - \frac{\partial Q_{STO}}{\partial h_n} \right ) h^{k-1}_n + \sum\limits_{m \in \eta_{n}} \frac{\partial Q_{n,m}}{\partial h_m} h^{k-1}_{m}.
+\end{split}
+\end{equation}
 
 
 \subsection{Temporal Discretization}
