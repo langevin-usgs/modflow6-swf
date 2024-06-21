@@ -17,7 +17,10 @@ examples/basin/mf6_ss_sfr
 examples/basin/mf6_ss_swf
 examples/basin/mf6_swf
 
+examples/pinder_sauer/mf6_*
+
 examples/vcatch/mf6_*
+examples/vcatchgwf/mf6_*
 
 examples/axisymmetric/mf6_*
 examples/axisymmetric/swr-model/*.stg
@@ -27,3 +30,5 @@ examples/radialvoronoi/mf6_*
 examples/radialstructured/mf6_*
 
 examples/one_d/mf6_*
+
+examples/drb/*

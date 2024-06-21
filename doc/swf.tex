@@ -218,10 +218,10 @@ A general control-volume finite-difference (CVFD) equation can be written as
 The SWF Model can be connected to an underlying Groundwater Flow (GWF) Model using a SWF-GWF Exchange.  The flow between the SWF and GWF Models is calculated based on the following expression for flow,
 
 \begin{equation}
-  Q_{n,m} = s_{n} A_{n,m} \acute{K}_{n,m} (h_m - h_n),
+  Q_{n,m} = s_{n,m} A_{n,m} \acute{K}_{n,m} (h_m - h_n),
 \end{equation}
 
-\noindent where $Q_{n,m}$ is the volumetric flow rate between a surface water cell $n$ and a groundwater model cell $m$ in $L^{3}$T$^{-1}$, $s_n$ is a quadratic smoothing factor that ranges from zero when the surface water depth is zero to a value of one when the surface water depth is greater than or equal to a small fixed depth (presently set as $10^{-6}$), $A_{n,m}$ is the interaction area for flow ($L^2$), $\acute{K}_{n,m}$ is the leakance ($T^{-1}$) of the bed sediments calculated as the hydraulic conductivity of the bed sediments divided the thickness of the bed sediments, and $h_n$ and $h_m$ are the water surface elevation and groundwater head of the surface water cell and groundwater cell, respectively.
+\noindent where $Q_{n,m}$ is the volumetric flow rate between a surface water cell $n$ and a groundwater model cell $m$ in $L^{3}$T$^{-1}$, $s_{n,m}$ is a quadratic smoothing factor that ranges from zero when the upstream-weighted water depth is zero to a value of one when the upstream-weighted water depth is greater than or equal to a smoothening depth (presently set as $10^{-6}$), $A_{n,m}$ is the interaction area for flow ($L^2$), $\acute{K}_{n,m}$ is the leakance ($T^{-1}$) of the bed sediments calculated as the hydraulic conductivity of the bed sediments divided the thickness of the bed sediments, and $h_n$ and $h_m$ are the water surface elevation and groundwater head of the surface water cell and groundwater cell, respectively.
 
 The interaction area for flow $A_{n,m}$ is defined differently for channel cells than for overland flow cells.  For channel cells, the interaction area is defined as
 
@@ -435,6 +435,13 @@ Results from the MODFLOW 6 SWF Model simulation are compared in Figure~\ref{fig:
 	\caption[Simulated discharge for the tilted v-catchment example.]{Simulated discharge for the tilted v-catchment example.  Dashed blue line separates the first 90-minute period with rainfall from the second 90-minute period with no rainfall.}
 	\label{fig:vcatch}
 \end{figure}
+
+\subsection{Tilted V-Catchment with Aquifer Exchange}
+
+\cite{panday2004} modified the tilted v-catchment problem to include an underlying aquifer.  Flow in their underlying aquifer was represented using Richards equation in order to represent unsaturated flow.  Given that MODFLOW 6 does not have a Richards formulation, this problem was represented using a single aquifer layer with the unconfined flow equation.
+
+\subsection{Modified Pinder-Sauer}
+Pinder-Sauer problem is a channel flowing over an aquifer.  A sinusoidal inflow at the top of the channel propogates through the domain.  Lal (xxx) came up with an analytical solution that is compared to fluctuations in the simulated flow in the channel as well as fluctuations in simulated stage in the channel.
 
 \bibliographystyle{plain}
 \bibliography{swfref} 
