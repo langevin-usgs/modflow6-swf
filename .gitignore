@@ -32,3 +32,5 @@ examples/radialstructured/mf6_*
 examples/one_d/mf6_*
 
 examples/drb/*
+
+examples/pinder_sauer/mf6_*
