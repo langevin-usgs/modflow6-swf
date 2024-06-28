@@ -1,9 +1,11 @@
 \documentclass[fleqn]{article}
 \author{MODFLOW Development Team}
 
+\usepackage{natbib}
 \usepackage{amsmath}
 \usepackage{xcolor}
 \usepackage{graphicx}
+
 \graphicspath{{./figures/}}
 
 
@@ -15,10 +17,44 @@
 \tableofcontents
 
 \section{Introduction}
-The Surface Water Flow (SWF) Model simulates one-dimensional channel flow and two-dimensional overland flow.  The SWF Model is a new model type in the MODFLOW 6 framework.  Like other models in the MODFLOW 6 framework, the SWF Model consists of required and optional packages.
+The Surface Water Flow (SWF) Model simulates one-dimensional channel flow and two-dimensional overland flow using the diffusive-wave approximation to the Saint-Venant equations.  The SWF Model is integrated into the MODFLOW 6 framework.  The SWF Model can be run by itself in a MODFLOW 6 simulation or it can be coupled with a Groundwater Flow (GWF) Model using an SWF-GWF Exchange.
 
-Shallow water equations
-Vertically integrated surface water flow
+There are three different types of discretization packages that can be used with the SWF Model.  These include 
+
+\begin{itemize}
+  \item Discretization by Vertices in One Dimension (DISV1D), 
+  \item Discretization by Vertices in Two Dimensions (DISV2D), and
+  \item Structured Discretization in Two Dimensions (DIS2D).
+\end{itemize}
+
+\noindent For SWF Models that simulate one-dimensional channel flow, the DISV1D Package must be used.  For SWF models that simulate two-dimensional channel flow, either the DIV2D or DIS2D Packages must be used.  Because an SFW Model can use only one discretization package, an SWF Model must be either a channel model or an overland flow model.  More than one SWF Model can be used in a simulation.
+
+In addition to the discretization package, the SWF Model supports other required and optional packages as shown in table \ref{table:ftype-swf}.
+
+\begin{table}[ht]
+   \caption{Packages that can be activated and used with the Surface Water Flow (SWF) Model.}
+   \begin{tabular*}{\columnwidth}{l l l}
+   \hline
+   \hline
+   File Type & Input File Description & Multi-Package \\
+   \hline
+   DISV1D6 & Discretization by Vertices in One Dimension \\
+   DISV2D6 & Discretization by Vertices in Two Dimensions \\
+   DIS2D6 & Structured Discretization in Two Dimensions \\
+   IC6 & Initial Conditions \\
+   OC6 & Output Control \\
+   DFW6 & Diffusive Wave \\ 
+   STO6 & Storage \\
+   CHD6 & Time-Variant Specified Head & * \\
+   FLW6 & Specified Flow & * \\
+   ZDG6 & Zero-Depth Gradient Outflow & * \\
+   OBS6 & Observations \\
+   \hline 
+   \end{tabular*}
+   \label{table:ftype-swf}
+%   \end{center}
+%   \normalsize
+  \end{table}
 
 \section{Formulation and Solution of the Control-Volume Finite-Difference Equation}
 
@@ -38,7 +74,7 @@ Following~\cite{panday2004} and~\cite{hughes2012documentation} the partial diffe
 \label{eqn:onedpd}
 \end{equation}
 
-\noindent where $\ell$ is the length ($L$) along the channel, $A$ is the cross-sectional area  ($L^2$) for flow, $R$ is the hydraulic radius ($L$), $n$ is the Manning's roughness coefficient ($T/L^{\frac{1}{3}}$), $h$ is the water surface elevation ($L$), $Q_s'$ is a source term representing the volumetric flow rate of a source per length of channel ($L^2/T$), and $t$ is time ($T$). 
+\noindent where $\ell$ is the length ($L$) along the channel, $A$ is the cross-sectional area  ($L^2$) for flow, $R$ is the hydraulic radius ($L$) defined as the flow area divided by the wetted perimeter, $n$ is the Manning's roughness coefficient ($T/L^{\frac{1}{3}}$), $h$ is the water surface elevation ($L$), $Q_s'$ is a source term representing the volumetric flow rate of a source per length of channel ($L^2/T$), and $t$ is time ($T$). 
 
 For two-dimensional overland flow, the partial differential equation can be written as
 
@@ -64,14 +100,12 @@ Due to the dimensionality difference between one-dimensional channel flow and tw
 Equations~\ref{eqn:onedpd} and~\ref{eqn:twodpd}, together with initial conditions and any relevant boundary conditions, represents mathematically the surface water flow balance at any point in the model domain. In certain simple cases, equations~\ref{eqn:onedpd} and~\ref{eqn:twodpd} can be solved analytically to obtain a mathematical expression for water surface elevation and flow throughout a model domain. The balance of surface water flow is formulated for each model cell, taking into account the flows of water to and from neighboring cells, as well as changes in storage and any external sources and sinks.  Taken together, the surface water flow balance equations for all the cells form a system of linear equations that is solved iteratively using a linear matrix solver. Details of the CVFD implementation in the SWF Model are described below.
 
 \subsection{Characteristics of a Model Cell}
-An SWF Model can represent either one-dimensional channel flow or two-dimensional overland flow.  The characterics of a model cell are different depending on whether the model represents channel flow or overland flow.
-
-For one-dimensional channels, surface water flows through a network of connected model cells.  Model cells are one dimensional in plan view but can have different cross-sectional geometries.  The default cross-sectional geometry corresponds to a hydraulically wide rectangular channel in which there is no resistance to flow along the vertical sides.  If the default channel configuration does not represent field conditions, then the Cross Section (CXS) Package can be activated and used to provide more detailed cross-section information.
+The characterics of a model cell are different depending on whether the model represents channel flow or overland flow.  For one-dimensional channels, surface water flows through a network of connected model cells.  Model cells are one dimensional in plan view but can have different cross-sectional geometries.  The default cross-sectional geometry corresponds to a hydraulically wide rectangular channel in which there is no resistance to flow along the vertical sides.  If the default channel configuration does not represent field conditions, then the Cross Section (CXS) Package can be activated and used to provide more detailed cross-section information.
 
 Two-dimensional overland flow is modeled on a structured or unstructured grid.  For each cell, the SWF Model calculates the water surface elevation for the cell and for flow between each model cell and its neighbors.  Resistance to flow occurs through a Manning's roughness coefficient.
 
 \subsection{Connections Between Cells}
-A connection between two cells indicates that the cells are in hydraulic communication where surface water can flow between the cells under the influence of a hydraulic gradient.  Cell connections are calculated by the SWF Model using information about the channel network or the overland flow grid.  For channel (DISV1D) and two dimensional vertex (DISV2D) grids, cell connectivity is determined by the presence of shared vertices.  For a structured two-dimensional grid (DIS2D), each cell is hydraulically connected to the four surrounding cells.  
+A connection between two cells indicates that the cells are in hydraulic communication and that surface water can flow between the cells under the influence of a hydraulic gradient.  Cell connections are calculated by the SWF Model using information about the channel network or the overland flow grid.  For channel (DISV1D) and two dimensional vertex (DISV2D) grids, cell connectivity is determined by the presence of shared vertices.  For a structured two-dimensional grid (DIS2D), each cell is hydraulically connected to the four surrounding cells.  
 
 For accurate solutions with the CVFD method, there are geometric requirements regarding cell connections.  First, a line drawn between the centers of any two connected cells should intersect the shared face at a right angle. Second, the intersection point should coincide with an appropriate mean position on the shared face \cite{narasimhan1976integrated}.  The smaller the deviation from these CVFD connection requirements, the smaller the loss in accuracy in the surface water flow solution. 
 
@@ -102,13 +136,13 @@ Flows between cells are called ``internal flows.'' Internal flows between cells 
 
 \noindent where $R$ is the hydraulic radius ($L$) equal to the flow area divided by the wetted perimeter, and $S_f$ is the water surface slope (dimensionless). 
 
-For the numerical implementation in MODFLOW we express Manning's equation as a product of a conductance term and the head difference between reach $n$ and $m$:
+For the numerical implementation in MODFLOW Manning's equation is expressed as a product of a conductance term and the head difference between reach $n$ and $m$:
 
 \begin{equation}
   Q_{nm} = \overline{C}_{nm} \left ( h_m - h_n \right ).
 \end{equation}
 
-\noindent The conductance-based flow expression allows individual cell conductances to be calculated for each of the two connected reaches and then averaged together to give a representative conductance for the connection.  The representative conductance between reach $n$ and reach $m$ ($\overline{C}_{nm}$) is calculated by averaging a conductance for reach $n$ with a conductance for reach $m$.  The conductance for reach $n$, denoted by $C_{mn}$ ($L^2/T$), is calculated over the distance from the stage calculation point of $n$ to its shared face with cell $m$.  Likewise, the conductance for reach $m$, over the distance between the stage calculation point for $m$ and its shared face with cell $n$ is denoted by $C_{mn}$ and also has dimensions of $L^2/T$.
+\noindent The conductance-based flow expression allows individual cell conductances to be calculated for each of the two connected reaches and then averaged together to give a representative conductance for the connection.  The representative conductance between reach $n$ and reach $m$ ($\overline{C}_{nm}$) is calculated by averaging a conductance for reach $n$ with a conductance for reach $m$.  The conductance for reach $n$, denoted by $C_{nm}$ ($L^2/T$), is calculated over the distance from the stage calculation point of $n$ to its shared face with cell $m$.  Likewise, the conductance for reach $m$, over the distance between the stage calculation point for $m$ and its shared face with cell $n$ is denoted by $C_{mn}$ and also has dimensions of $L^2/T$.
 
 The average conductance between reach $n$ and reach $m$ is calculated using the harmonic mean of $C_{nm}$ and $C_{mn}$ to give
 
@@ -121,7 +155,7 @@ The average conductance between reach $n$ and reach $m$ is calculated using the 
 The conductance for reach $n$ in the $m$ direction ($C_{nm}$) can be expressed as
 
 \begin{equation}
-  C_{mn} = 
+  C_{nm} = 
   \frac{
   A_n 
   R_{n}^{\frac{2}{3}}
@@ -249,9 +283,12 @@ Flow throughout the connected channel network is based on a Newton-Raphson formu
 \end{split}
 \end{equation}
 
+Need to describe the implementation approach.  Perturbation derivatives (and the Kelly approach), etc.
+
 
 \subsection{Temporal Discretization}
-Adaptive time stepping
+Short time steps are required
+Adaptive time stepping may help
 
 \subsection{Sources and Sinks}
 
@@ -476,7 +513,8 @@ The simulation was run with and without leakage.  Results from the SWF Model for
 \end{figure}
 
 
-\bibliographystyle{plain}
+% \bibliographystyle{plain}
+\bibliographystyle{apalike}
 \bibliography{swfref} 
 
 \end{document}
