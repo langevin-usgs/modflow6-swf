@@ -127,6 +127,24 @@ Two-dimensional overland flow can be represented using either the regular struct
 
 For DIS2D grids, stage calculation points are located in the center of the model cell.  For DISV2D grids, stage calculation points are assigned by the user; they should generally be located in the center of the cell, but there is flexibility to adjust them spatially to better represent precise boundary locations.  By default, the model domain boundary represents no-flow conditions.  Outflow conditions must be activated by assigning a stress package to the desired locations.
 
+\subsection{Channel Cross Sections}
+
+% This figure below is for the case where roughness is the same for every line segment in the cross section 
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[scale=0.5]{figures/cxs.pdf}
+	\caption[Schematic showing different types of channel cross sections with constant roughness.]{Schematic showing different types of cross sections with a single Manning's roughness coefficient $n$: (a) hydraulically wide cross section defined using the width input parameter; (b) hydraulically wide cross section defined using two points; (c) a rectangular cross section defined using four points, and (d) a trapezoidal cross section defined using four points.  For the hydraulically wide rectangular cross sections in (a) and (b) the model does not include any channel resistance for the vertical wetted sections corresponding to the dashed lines.  For cross sections shown in (c) and (d), if the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
+	\label{fig:cxs}
+\end{figure}
+
+% This figure below is for the case where roughness varies for each line segment in the cross section 
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[scale=0.5]{figures/cxs_rough.pdf}
+	\caption[Schematic showing different types of channel cross sections with variable roughness.]{Schematic showing different types of cross sections with variable Manning's roughness coefficient: (a) a rectangular cross section defined using four points, and (b) a trapezoidal cross section defined using four points.  The Manning's roughness coefficient is varies by line segment.  If the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
+	\label{fig:cxs_rough}
+\end{figure}
+
 \subsection{Internal Flows Between Cells}
 Flows between cells are called ``internal flows.'' Internal flows between cells are calculated using Manning's equation.  The following is a general expression for Manning's equation:
 
@@ -216,7 +234,31 @@ Channel conveyance is calculated in several different ways depending on how a cr
 \noindent where $NLS$ is the number of line segments used to define the channel cross section.
 
 
-\subsection{External Source and Sink Flow}
+\subsection{Sources and Sinks}
+
+The SWF Model supports the addition or removal of water to or from an individual reach using the specified flow (FLW) Package.  
+
+
+\subsection{Outflow Boundaries}
+The SWF Model supports two types of outflow boundaries.  These include the Zero-Depth Gradient (ZDG) Package and the Critical-Depth Boundary (CDB) Package.
+
+\subsubsection{Zero-Depth Gradient Package}
+
+\begin{equation}
+  Q_{n}^{ZDG} = 
+  \kappa_n \left ( d_n \right ) \sqrt{S_0} .
+\label{eqn:qzdg}
+\end{equation}
+
+
+\subsubsection{Critical-Depth Boundary Package}
+
+\begin{equation}
+  Q_{n}^{CDB} = 
+  \left ( g A_n^2 R_n \right )^{1/2}
+\label{eqn:qcdb}
+\end{equation}
+
 
 \subsection{Derivation of Control-Volume Finite-Difference Equations}
 
@@ -224,28 +266,25 @@ A general control-volume finite-difference (CVFD) equation can be written as
 
 \begin{equation}
   \label{eqn:cvfd}
+  \begin{split}
+  \sum \limits_{m \in \eta_{n}} Q_{n,m}^{SWF}
+  + \sum \limits_{m \in S_{n}} Q_{n,m}^{SWF-SWF}
+  + \sum \limits_{m \in G_{n}} Q_{n,m}^{SWF-GWF} \\
+  + \sum \limits_{iss=1}^{NSS_n} Q_{n,iss}^{SS}
+  + Q_n^{ZDG}
+  + Q_n^{CDB}
+  - Q_{STO} 
+  = 
+  0,
+  \end{split}
+\end{equation}
+  
+\begin{equation}
+  \label{eqn:cvfd}
   \sum \limits_{m \in \eta_{n}} Q_{n,m} + Q_{n,s} - Q_{STO} = 0,
-  \end{equation}
+\end{equation}
   
 \noindent where $\eta_{n}$ is a list of the cells connected to cell $n$, $Q_{n,m}$ is the flow rate into cell $n$ from cell $m$ ($Q_{n,m}$ is negative if flow is from cell $n$ to cell $m$) with dimensions of L$^{3}$T$^{-1}$, $Q_{n,s}$ is the flow rate of sources and sinks into cell $n$ (L$^{3}$T$^{-1}$), and $Q_{STO}$ is the change in the volume of water stored in cell $n$ (L$^{3}$T$^{-1}$).
-
-\subsection{Channel Cross Sections}
-
-% This figure below is for the case where roughness is the same for every line segment in the cross section 
-\begin{figure}[h!tbp]
-	\centering
-	\includegraphics[scale=0.5]{figures/cxs.pdf}
-	\caption[Schematic showing different types of channel cross sections with constant roughness.]{Schematic showing different types of cross sections with a single Manning's roughness coefficient $n$: (a) hydraulically wide cross section defined using the width input parameter; (b) hydraulically wide cross section defined using two points; (c) a rectangular cross section defined using four points, and (d) a trapezoidal cross section defined using four points.  For the hydraulically wide rectangular cross sections in (a) and (b) the model does not include any channel resistance for the vertical wetted sections corresponding to the dashed lines.  For cross sections shown in (c) and (d), if the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
-	\label{fig:cxs}
-\end{figure}
-
-% This figure below is for the case where roughness varies for each line segment in the cross section 
-\begin{figure}[h!tbp]
-	\centering
-	\includegraphics[scale=0.5]{figures/cxs_rough.pdf}
-	\caption[Schematic showing different types of channel cross sections with variable roughness.]{Schematic showing different types of cross sections with variable Manning's roughness coefficient: (a) a rectangular cross section defined using four points, and (b) a trapezoidal cross section defined using four points.  The Manning's roughness coefficient is varies by line segment.  If the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
-	\label{fig:cxs_rough}
-\end{figure}
 
 \subsection{Aquifer Interaction}
 
@@ -300,11 +339,16 @@ A zero-depth-gradient (ZDG) boundary condition can be assigned to any reach to a
   Q = \frac{1}{n}A R^{2/3} \sqrt{S_0}
 \end{equation}
 
+\subsection{Recommendation on Solver Settings}
 
-\section{Integration into MODFLOW 6}
+\begin{itemize}
+  \item bicgstab
+  \item relaxation set to 0.
+  \item maybe delta bar delta under-relaxation
+  \item maybe backtracking
+  \item levels of fill
+\end{itemize}
 
-Need to update this section with perturbation approach described by Kelly
-The epsilon used for derivative calculation must be small.  1.D-8 was working well until we tried the one-dimensional problem with tiny cells (200,000 cells).  With 1.D-8, a floating point exception was encountered in the dot product as part of the bicgstab calculation.  When this value was reduced to 1.D-12, the program worked as expected.
 
 \newpage
 \section{Examples}
