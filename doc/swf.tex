@@ -244,21 +244,36 @@ The SWF Model supports two types of outflow boundaries.  These include the Zero-
 
 \subsubsection{Zero-Depth Gradient Package}
 
+The zero-depth-gradient outflow condition uses Manning's equation and the calculated stage in the cell to determine the volumetric outflow rate, $Q_{n}^{ZDG}$, in dimensions of $L^3/T$ as
+
 \begin{equation}
   Q_{n}^{ZDG} = 
-  \kappa_n \left ( d_n \right ) \sqrt{S_0} .
+  \kappa_{n,izdg} \left ( d_n \right ) \sqrt{S_0},
 \label{eqn:qzdg}
 \end{equation}
 
+\noindent where $\kappa_{n,izdg}$ is conveyance ($L^3/T$) calculated for cell $n$ using the properties specified by the user for the zero-depth-gradient condition $izdg$.  The conveyance $\kappa_{n,izdg}$ is calculated as
 
-\subsubsection{Critical-Depth Boundary Package}
+\begin{equation}
+  \kappa_{n,izdg} = \frac{A_{izdg} (d_n) R_{izdg} (d_n)^{\frac{2}{3}}}{n_{izdg}},
+\label{eqn:conveyancezdg}
+\end{equation}
+
+\noindent where $A_{izdg} (d_n)$ is the flow area ($L^2$) calculated for the channel or overland flow cell using the smoothed cell depth $(d_n)$, $R_{izdg} (d_n)$ is the hydraulic radius ($L$) calculated for the channel or overland flow cell using the smoothed cell depth $(d_n)$, and $n_{izdg}$ is the Manning's roughness coefficient ($T/L^{1/3}$) specified by the user for the $izdg$ condition.  
+
+For channels, the flow area and hydraulic radius are calculated using the cross-section geometry specified for cell $n$.  If a cross-section geometry is specified for the channel, then the cross-section geometry is used with the width parameter specified for the zero-depth-gradient condition in the calculation of flow area and hydraulic radius.
+
+\subsubsection{Critical-Depth-Boundary Package}
+
+With the critical-depth condition outflow is calculated such that the simulated depth is equal to the critical depth.  The critical depth is the depth of water that occurs under free-fall conditions, such as at a waterfall or other steep break in bottom surface slope.  The critical-depth-boundary is included by calculating the outflow $Q_{n}^{CDB}$ according to the following equation,
 
 \begin{equation}
   Q_{n}^{CDB} = 
-  \left ( g A_n^2 R_n \right )^{1/2}
+  \left ( g A_{icdb} (d_n)^2 R_{icdb} (d_n) \right )^{1/2},
 \label{eqn:qcdb}
 \end{equation}
 
+\noindent where $g$ is the constant of acceleration due to gravity ($L^2/T$), $A_{icdb} (d_n)$ is the flow area ($L^2$) calculated for the channel or overland flow cell using the smoothed cell depth $(d_n)$, and $R_{icdb} (d_n)$ is the hydraulic radius ($L$) calculated for the channel or overland flow cell using the smoothed cell depth $(d_n)$.
 
 \subsection{Derivation of Control-Volume Finite-Difference Equations}
 
