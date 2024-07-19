@@ -61,7 +61,11 @@ In addition to the discretization package, the SWF Model supports other required
 
 
 \section{Mathematical Model}
-Following~\cite{panday2004} and~\cite{hughes2012documentation} the partial differential equation for the the diffusive wave approximation to the full St. Venant equations can be written for both one-dimensional channel flow and two-dimensional overland flow.  In both cases, flow is based on Manning's equation, which can be expressed as
+Following~\cite{panday2004} and~\cite{hughes2012documentation} the partial differential equation for the the diffusive wave approximation to the full St. Venant equations can be written for both one-dimensional channel flow and two-dimensional overland flow.  In both cases, flow is expressed using Manning's equation.
+
+\subsection{Manning's Equation}
+
+Manning's equation can be expressed as
 
 \begin{equation}
   Q = \frac{1}{n} A R^{\frac{2}{3}} \sqrt{S_f},
@@ -69,6 +73,8 @@ Following~\cite{panday2004} and~\cite{hughes2012documentation} the partial diffe
 \end{equation}
 
 \noindent where Q is the volumetric flow rate in $L^3/T$, $n$ is the Manning's roughness coefficient in $T/L^{1/3}$, $A$ is the area perpendicular to flow ($L^2$), $R$ is the hydraulic radius ($L$) defined as the area divided by the wetted perimeter, and $S_f$ is the friction slope (dimensionless).
+
+\subsection{One-Dimensional Channel Flow}
 
 The following equation is for one-dimensional channel flow,
 
@@ -84,6 +90,8 @@ The following equation is for one-dimensional channel flow,
 \end{equation}
 
 \noindent where $\ell$ is the length ($L$) along the channel, $A$ is the cross-sectional area  ($L^2$) for flow, $R$ is the hydraulic radius ($L$) defined as the flow area divided by the wetted perimeter, $n$ is the Manning's roughness coefficient ($T/L^{\frac{1}{3}}$), $h$ is the water surface elevation ($L$), $Q_s'$ is a source term representing the volumetric flow rate of a source per length of channel ($L^2/T$), and $t$ is time ($T$). 
+
+\subsection{Two-Dimensional Overland Flow}
 
 For two-dimensional overland flow, the partial differential equation can be written as
 
@@ -107,6 +115,61 @@ Due to the dimensionality difference between one-dimensional channel flow and tw
 
 \section{Numerical Model}
 The surface water flow equation in MODFLOW 6 is discretized using a control-volume finite-difference (CVFD) method. This section describes the equations formulated by the SWF model, discretization options, and the general forms of the finite-difference equations used to simulate channel and overland surface water flow.
+
+\subsection{Spatial Discretization}
+
+The SWF Model supports two different types of discretization approaches: a one-dimensional channel network and a two-dimensional overland flow grid.  The two-dimensional overland flow grid may use either a structured grid consisting of rows and columns or an unstructured grid specified using vertices and cells that are defined using those vertices.  A SWF Model must use either the one-dimensional channel network or the the two-dimensional overland flow discretization approaches.  
+
+The characteristics of a model cell are different depending on whether the model represents channel flow or overland flow.  For one-dimensional channels, surface water flows through a network of connected model cells.  Model cells are one dimensional in plan view but can have different cross-sectional geometries.  The default cross-sectional geometry corresponds to a hydraulically wide rectangular channel in which there is no resistance to flow along the vertical sides.  If the default channel configuration does not represent field conditions, then the Cross Section (CXS) Package can be activated and used to provide more detailed cross-section information.  Two-dimensional overland flow is modeled on a structured or unstructured grid.  For each cell, the SWF Model calculates the water surface elevation for the cell and for flow between each model cell and its neighbors.  Resistance to flow occurs through a Manning's roughness coefficient.
+
+\subsubsection{One-Dimensional Channel Flow}
+A one-dimensional channel network is represented using the Discretization by Vertices in One Dimension (DISV1D) Package.  An example of a channel network is shown in figure~\ref{fig:channel_network}.  The channel network is discretized into reaches.  The SWF Model solves for the water level in reach by balancing the flows between reaches with storage changes and sources.  Stage calculation points within a reach are typically located halfway between the reach starting and ending vertices; however, the user may adjust the stage calculation point in either direction (toward or away from the first reach vertex), which can be advantageous in some situations.  A reach is connected to another reach when they share a vertex.  Reaches do not need to be defined in any particular order.  If a reach terminates at a vertex and that vertex is not shared by another reach, then by default, there is no outflow from the ending vertex location.  If the user intends for outflow to occur, then a stress package must be activated and assigned to that reach.
+
+\begin{figure}
+  \centering
+  \includegraphics[scale=0.9]{figures/channel_network.pdf}
+  \caption[Schematic showing a channel network.]{Schematic showing a channel network.  The channel network is discretized by the user into reaches.  Stage is calculated within the reach at stage calculation points.  Stage calculations are typically located halfway between the reach start and reach end vertices, however, the user can adjust the fractional position of the stage calculation point along the reach.}
+  \label{fig:channel_network}
+\end{figure}
+  
+\subsubsection{Two-Dimensional Overland Flow}
+Two-dimensional overland flow can be represented using either the regular structured grid discretization (DIS2D) Package or the unstructured discretization by vertices (DISV2D) Package.  These two discretization types are patterned after their Groundwater Flow (GWF) Model counterparts, DIS and DISV, respectively.  The difference between the SWF overland flow discretization types and the GWF Model discretization types is that the SWF versions are two dimensional and do not have a top defined or multiple layers.
+
+For DIS2D grids, stage calculation points are located in the center of the model cell.  For DISV2D grids, stage calculation points are assigned by the user; they should generally be located in the center of the cell, but there is flexibility to adjust them spatially to better represent precise boundary locations.  By default, the model domain boundary represents no-flow conditions.  Outflow conditions must be activated by assigning a stress package to the desired locations.
+
+For accurate solutions of overland flow with the CVFD method, there are geometric requirements regarding cell connections.  First, a line drawn between the centers of any two connected cells should intersect the shared face at a right angle. Second, the intersection point should coincide with an appropriate mean position on the shared face \cite{narasimhan1976integrated}.  The smaller the deviation from these CVFD connection requirements, the smaller the loss in accuracy in the surface water flow solution. 
+
+\subsubsection{Channel Cross Sections}
+
+For SWF Models defined to represent channel flow (those models that use the DISV1D discretization package), each cell is characterized by a cross-section geometry.  By default, a channel is assigned a rectangular cross-section with a width provided by the user.  With the default cross-section geometry, the channel is treated as hydraulically wide with the wetted perimeter set equal to the channel width (Figure \ref{fig:cxs}a).
+
+Users may also define more detailed cross-section geometries using the Cross Section (CXS) Package.  Examples of cross-section geometries are shown in Figure \ref{fig:cxs}b--d.
+
+Users may also define different Manning's roughness coefficients for each segment within a cross section, as shown in Figure \ref{fig:cxs_rough}.
+
+% This figure below is for the case where roughness is the same for every line segment in the cross section 
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[scale=0.5]{figures/cxs.pdf}
+	\caption[Schematic showing different types of channel cross sections with constant roughness.]{Schematic showing different types of cross sections with a single Manning's roughness coefficient $n$: (a) hydraulically wide cross section defined using the width input parameter; (b) hydraulically wide cross section defined using two points; (c) a rectangular cross section defined using four points, and (d) a trapezoidal cross section defined using four points.  For the hydraulically wide rectangular cross sections in (a) and (b) the model does not include any channel resistance for the vertical wetted sections corresponding to the dashed lines.  For cross sections shown in (c) and (d), if the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
+	\label{fig:cxs}
+\end{figure}
+
+% This figure below is for the case where roughness varies for each line segment in the cross section 
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[scale=0.5]{figures/cxs_rough.pdf}
+	\caption[Schematic showing different types of channel cross sections with variable roughness.]{Schematic showing different types of cross sections with variable Manning's roughness coefficient: (a) a rectangular cross section defined using four points, and (b) a trapezoidal cross section defined using four points.  The Manning's roughness coefficient varies by line segment.  If the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
+	\label{fig:cxs_rough}
+\end{figure}
+
+\subsection{Temporal Discretization}
+
+The SWF Model supports both steady-state and transient solutions.  For steady-state time steps, the formulation does not include a storage term.  In this case convergence is achieved when inflows and outflows balance for each cell to within a user-specified tolerance.
+
+For transient conditions, users must discretize the simulation period into time steps.  For surface water models, it is often necessary to use short time steps, in many cases time steps that are less than an hour. 
+
+Lengths of time steps are configured by the user within the Temporal Discretization (TDIS) Package.  TDIS settings are applied to all models in the simulation.  For surface water flow systems with large changes in flow rates, it may be beneficial to use the Adaptive Time Step (ATS) Package.  The ATS Package can shorten or lengthen time steps based on convergence behavior of the iterative solver.  The ATS Package will also retry failed time steps by shortening the lenght of the time step.  In some cases, retrying failed time steps can allow the simulation to proceed through rapidly changing flow events without terminating prematurely.
 
 \subsection{Control-Volume Finite-Difference Equation}
 Equations~\ref{eqn:onedpd} and~\ref{eqn:twodpd}, together with initial conditions and any relevant boundary conditions, represents mathematically the surface water flow balance at any point in the model domain. In certain simple cases, equations~\ref{eqn:onedpd} and~\ref{eqn:twodpd} can be solved analytically to obtain a mathematical expression for water surface elevation and flow throughout a model domain. The balance of surface water flow is formulated for each model cell, taking into account the flows of water to and from neighboring cells, the flow of water to and from cells in a connected surface water model, the flow of water to and from cells in a connected groundwater model, boundary outflows, as well as flows to or from external sources and sinks, and changes in storage.  The general control-volume finite-difference (CVFD) equation for both channel and overland flow is expressed as
@@ -141,68 +204,8 @@ All of the flow terms in equation \ref{eqn:cvfd} have dimensions of L$^{3}$T$^{-
 
 Taken together, the surface water flow balance equations for all the cells form a system of linear equations that is solved iteratively using a linear matrix solver. Details of the individual terms and the CVFD implementation in the SWF Model are described below.
 
-\subsection{Characteristics of a Model Cell}
-The characterics of a model cell are different depending on whether the model represents channel flow or overland flow.  For one-dimensional channels, surface water flows through a network of connected model cells.  Model cells are one dimensional in plan view but can have different cross-sectional geometries.  The default cross-sectional geometry corresponds to a hydraulically wide rectangular channel in which there is no resistance to flow along the vertical sides.  If the default channel configuration does not represent field conditions, then the Cross Section (CXS) Package can be activated and used to provide more detailed cross-section information.
-
-Two-dimensional overland flow is modeled on a structured or unstructured grid.  For each cell, the SWF Model calculates the water surface elevation for the cell and for flow between each model cell and its neighbors.  Resistance to flow occurs through a Manning's roughness coefficient.
-
-\subsection{Connections Between Cells}
-A connection between two cells indicates that the cells are in hydraulic communication and that surface water can flow between the cells under the influence of a hydraulic gradient.  Cell connections are calculated by the SWF Model using information about the channel network or the overland flow grid.  For channel (DISV1D) and two dimensional vertex (DISV2D) grids, cell connectivity is determined by the presence of shared vertices.  For a structured two-dimensional grid (DIS2D), each cell is hydraulically connected to the four surrounding cells.  
-
-For accurate solutions with the CVFD method, there are geometric requirements regarding cell connections.  First, a line drawn between the centers of any two connected cells should intersect the shared face at a right angle. Second, the intersection point should coincide with an appropriate mean position on the shared face \cite{narasimhan1976integrated}.  The smaller the deviation from these CVFD connection requirements, the smaller the loss in accuracy in the surface water flow solution. 
-
-\subsection{Model Grids}
-The SWF Model supports two different types of discretization approaches: a one-dimensional channel network and a two-dimensional overland flow grid.  The two-dimensional overland flow grid may use either a structured grid consisting of rows and columns or an unstructured grid specified using vertices and cells that are defined using those vertices.  A SWF Model must use either the one-dimensional channel network or the the two-dimensional overland flow discretization approaches.  
-
-\subsubsection{One-Dimensional Channel Flow}
-A one-dimensional channel network is represented using the Discretization by Vertices in One Dimension (DISV1D) Package.  An example of a channel network is shown in figure~\ref{fig:channel_network}.  The channel network is discretized into reaches.  The SWF Model solves for the water level in reach by balancing the flows between reaches with storage changes and sources.  Stage calculation points within a reach are typically located halfway between the reach starting and ending vertices; however, the user may adjust the stage calculation point in either direction (toward or away from the first reach vertex), which can be advantageous in some situations.  A reach is connected to another reach when they share a vertex.  Reaches do not need to be defined in any particular order.  If a reach terminates at a vertex and that vertex is not shared by another reach, then by default, there is no outflow from the ending vertex location.  If the user intends for outflow to occur, then a stress package must be activated and assigned to that reach.
-
-\begin{figure}
-  \centering
-  \includegraphics[scale=0.9]{figures/channel_network.pdf}
-  \caption[Schematic showing a channel network.]{Schematic showing a channel network.  The channel network is discretized by the user into reaches.  Stage is calculated within the reach at stage calculation points.  Stage calculations are typically located halfway between the reach start and reach end vertices, however, the user can adjust the fractional position of the stage calculation point along the reach.}
-  \label{fig:channel_network}
-\end{figure}
-  
-\subsubsection{Two-Dimensional Overland Flow}
-Two-dimensional overland flow can be represented using either the regular structured grid discretization (DIS2D) Package or the unstructured discretization by vertices (DISV2D) Package.  These two discretization types are patterned after their Groundwater Flow (GWF) Model counterparts, DIS and DISV, respectively.  The difference between the SWF overland flow discretization types and the GWF Model discretization types is that the SWF versions are two dimensional and do not have a top defined or multiple layers.
-
-For DIS2D grids, stage calculation points are located in the center of the model cell.  For DISV2D grids, stage calculation points are assigned by the user; they should generally be located in the center of the cell, but there is flexibility to adjust them spatially to better represent precise boundary locations.  By default, the model domain boundary represents no-flow conditions.  Outflow conditions must be activated by assigning a stress package to the desired locations.
-
-\subsubsection{Channel Cross Sections}
-
-For SWF Models defined to represent channel flow (those models that use the DISV1D discretization package), each cell is characterized by a cross-section geometry.  By default, a channel is assigned a rectangular cross-section with a width provided by the user.  With the default cross-section geometry, the channel is treated as hydraulically wide with the wetted perimeter set equal to the channel width (Figure \ref{fig:cxs}a).
-
-Users may also define more detailed cross-section geometries using the Cross Section (CXS) Package.  Examples of cross-section geometries are shown in Figure \ref{fig:cxs}b--d.
-
-Users may also define different Manning's roughness coefficients for each segment within a cross section, as shown in Figure \ref{fig:cxs_rough}.
-
-% This figure below is for the case where roughness is the same for every line segment in the cross section 
-\begin{figure}[h!tbp]
-	\centering
-	\includegraphics[scale=0.5]{figures/cxs.pdf}
-	\caption[Schematic showing different types of channel cross sections with constant roughness.]{Schematic showing different types of cross sections with a single Manning's roughness coefficient $n$: (a) hydraulically wide cross section defined using the width input parameter; (b) hydraulically wide cross section defined using two points; (c) a rectangular cross section defined using four points, and (d) a trapezoidal cross section defined using four points.  For the hydraulically wide rectangular cross sections in (a) and (b) the model does not include any channel resistance for the vertical wetted sections corresponding to the dashed lines.  For cross sections shown in (c) and (d), if the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
-	\label{fig:cxs}
-\end{figure}
-
-% This figure below is for the case where roughness varies for each line segment in the cross section 
-\begin{figure}[h!tbp]
-	\centering
-	\includegraphics[scale=0.5]{figures/cxs_rough.pdf}
-	\caption[Schematic showing different types of channel cross sections with variable roughness.]{Schematic showing different types of cross sections with variable Manning's roughness coefficient: (a) a rectangular cross section defined using four points, and (b) a trapezoidal cross section defined using four points.  The Manning's roughness coefficient varies by line segment.  If the water surface rises above the channel points, no channel resistance is included for sections above the uppermost points}
-	\label{fig:cxs_rough}
-\end{figure}
-
 \subsection{Internal Flows}
 Flows between cells, whether they are channel cells or overland flow cells, are called ``internal flows.'' An internal flow between two cells $n$ and $m$ is denoted by $Q_{n,m}^{SWF}$.  The sum of internal flows is shown as the first term in the CVFD equation (equation \ref{eqn:cvfd}).  Internal flows between cells are calculated using a form of Manning's equation in which flow area and hydraulic radius are calculated from the simulated depth in the cells, and the friction slope is calculated based on the head difference between cells.  
-
-% The following is a general expression for Manning's equation:
-
-% \begin{equation}
-%   Q = \frac{1}{n} A R^{\frac{2}{3}} \sqrt{S_f},
-% \end{equation}
-
-% \noindent where $R$ is the hydraulic radius ($L$) equal to the flow area divided by the wetted perimeter, and $S_f$ is the water surface slope (dimensionless). 
 
 For the numerical implementation in the SWF Model, Manning's equation is expressed as a product of a conductance term and the head difference between cells $n$ and $m$:
 
@@ -332,12 +335,29 @@ The CHD Package can be used to specify the head in a SWF Model cell.  The CHD Pa
 
 \subsection{Storage}
 
-For transient simulations, the storage change within a model cell is calculated as
+For transient simulations, the CVFD equation includes a storage term $Q_n^{STO}$.  This term accounts for the change in the volume of water in storage within cell $n$ during the time step.  $Q_n^{STO}$ is calculated differently depending on whether the cell represents a channel cell or an overland flow cell.  For a channel cell, $Q_n^{STO}$ is calculated as
 
+\begin{equation}
+  Q_{n}^{STO} = \frac{L_n}{\Delta t}\left ( A_n^{t + \Delta t} - A_n^t \right ),
+\label{eqn:qsto1d}
+\end{equation}
+
+\noindent where $L_n$ is the length of the channel cell ($L$), $\Delta t$ is the length of the time step ($T$), $A_n^{t + \Delta t}$ is the cross-sectional flow area ($L^2$) of cell $n$ at time $t + \Delta t$, and $A_n^t$ is the cross-sectional flow area ($L^2$) of cell $n$ at the end of the previous time step.
+
+For an overland flow cell, $Q_n^{STO}$ is calculated as
+
+\begin{equation}
+  Q_{n}^{STO} = \frac{A_n}{\Delta t}\left ( d_n^{t + \Delta t} - d_n^t \right ),
+\label{eqn:qsto2d}
+\end{equation}
+
+\noindent where $A_n$ is the area in plan view of the cell ($L$), $\Delta t$ is the length of the time step ($T$), $d_n^{t + \Delta t}$ is the water depth ($L$) of cell $n$ at time $t + \Delta t$, and $d_n^t$ is the water depth ($L$) of cell $n$ at the end of the previous time step.
+
+\textcolor{red}{Need to differentiate between cross-section area and plan view area.  Need a new symbol.}
 
 \subsection{Flow Exchange between Surface Water Models}
 
-Not implemented yet.
+\textcolor{red}{Not implemented yet.}
 
 
 \subsection{Flow Exchange between Surface Water and Groundwater Models}
@@ -465,10 +485,10 @@ Formulation of the terms in equation~\ref{eqn:nr3} requires calculation of deriv
 
 \begin{equation}
 \label{eqn:derv}
-\frac{\partial Q}{\partial h} = \frac{Q \left ( h + \epsilon \right ) - Q \left ( h \right )}{\epsilon},
+\frac{\partial Q}{\partial h} \approx \frac{\Delta Q}{\Delta h} = \frac{Q \left ( h + \epsilon \right ) - Q \left ( h \right )}{\epsilon},
 \end{equation}
   
-\noindent where $\epsilon$ is calculated as a function of $h$ and the machine precision $d_{prec}$.  Following an approach recommended by \cite{kelley2003} and implemented by \cite{hughes2012documentation} for the SWR Process for MODFLOW, $\epsilon$ is calculated as
+\noindent where $\epsilon$ is calculated as a function of $h$ and the machine precision $d_{prec}$.  Following an approach recommended by \cite{kelley2003} and implemented by \cite{hughes2012documentation} for the SWR Process for MODFLOW-2005, $\epsilon$ is calculated as
 
 \begin{equation}
 \label{eqn:epsilon}
@@ -476,20 +496,6 @@ Formulation of the terms in equation~\ref{eqn:nr3} requires calculation of deriv
 \end{equation}
 
 \noindent As indicated by \cite{kelley2003} this scaling does not normally make much of a difference, but it can be important if $h$ is large.
-
-\subsection{Temporal Discretization}
-Short time steps are required
-Adaptive time stepping may help
-
-\subsection{Sources and Sinks}
-
-\subsection{Initial and Boundary Conditions}
-
-A zero-depth-gradient (ZDG) boundary condition can be assigned to any reach to allow from the channel.  Flow out of the channel is calculated as
-
-\begin{equation}
-  Q = \frac{1}{n}A R^{2/3} \sqrt{S_0}
-\end{equation}
 
 \subsection{Recommendation on Solver Settings}
 
