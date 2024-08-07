@@ -123,12 +123,12 @@ The SWF Model supports two different types of discretization approaches: a one-d
 The characteristics of a model cell are different depending on whether the model represents channel flow or overland flow.  For one-dimensional channels, surface water flows through a network of connected model cells.  Model cells are one dimensional in plan view but can have different cross-sectional geometries.  The default cross-sectional geometry corresponds to a hydraulically wide rectangular channel in which there is no resistance to flow along the vertical sides.  If the default channel configuration does not represent field conditions, then the Cross Section (CXS) Package can be activated and used to provide more detailed cross-section information.  Two-dimensional overland flow is modeled on a structured or unstructured grid.  For each cell, the SWF Model calculates the water surface elevation for the cell and for flow between each model cell and its neighbors.  Resistance to flow occurs through a Manning's roughness coefficient.
 
 \subsubsection{One-Dimensional Channel Flow}
-A one-dimensional channel network is represented using the Discretization by Vertices in One Dimension (DISV1D) Package.  An example of a channel network is shown in figure~\ref{fig:channel_network}.  The channel network is discretized into reaches.  The SWF Model solves for the water level in reach by balancing the flows between reaches with storage changes and sources.  Stage calculation points within a reach are typically located halfway between the reach starting and ending vertices; however, the user may adjust the stage calculation point in either direction (toward or away from the first reach vertex), which can be advantageous in some situations.  A reach is connected to another reach when they share a vertex.  Reaches do not need to be defined in any particular order.  If a reach terminates at a vertex and that vertex is not shared by another reach, then by default, there is no outflow from the ending vertex location.  If the user intends for outflow to occur, then a stress package must be activated and assigned to that reach.
+A one-dimensional channel network is represented using the Discretization by Vertices in One Dimension (DISV1D) Package.  An example of a channel network is shown in figure~\ref{fig:channel_network}.  The channel network is discretized into individual control volumes called cells.  The general term ``cell'' is used here, instead of ``reach,'' for consistency with MODFLOW terminology.  The SWF Model solves for the water level in each cell by balancing the flows between cells with storage changes and sources.  Stage calculation points within a cell are typically located halfway between the cell starting and ending vertices; however, the user may adjust the stage calculation point in either direction (toward or away from the first cell vertex), which can be advantageous in some situations.  A cell is connected to another cell when they share a vertex.  Cells do not need to be defined in any particular order.  If a cell terminates at a vertex and that vertex is not shared by another cell, then by default, there is no outflow from the ending vertex location.  If the user intends for outflow to occur, then a stress package must be activated and assigned to that cell.
 
 \begin{figure}
   \centering
   \includegraphics[scale=0.9]{figures/channel_network.pdf}
-  \caption[Schematic showing a channel network.]{Schematic showing a channel network.  The channel network is discretized by the user into reaches.  Stage is calculated within the reach at stage calculation points.  Stage calculations are typically located halfway between the reach start and reach end vertices, however, the user can adjust the fractional position of the stage calculation point along the reach.}
+  \caption[Schematic showing a channel network.]{Schematic showing a channel network.  The channel network is discretized by the user into cells.  Stage is calculated within the cell at stage calculation points.  Stage calculations are typically located halfway between the cell start and cell end vertices, however, the user can adjust the fractional position of the stage calculation point along the cell.}
   \label{fig:channel_network}
 \end{figure}
   
@@ -181,7 +181,7 @@ Equations~\ref{eqn:onedpd} and~\ref{eqn:twodpd}, together with initial condition
   + \sum \limits_{iss=1}^{NSS_n} Q_{n,iss}^{SS}
   + Q_n^{ZDG}
   + Q_n^{CDB}
-  - Q_{STO} \\
+  - Q_n^{STO} \\
   + \sum \limits_{m \in S_{n}} Q_{n,m}^{SWF-SWF}
   + \sum \limits_{m \in G_{n}} Q_{n,m}^{SWF-GWF}
   = 
@@ -195,7 +195,7 @@ $Q_{n,m}^{SWF}$ is the flow into cell $n$ from cell $m$ ($Q_{n,m}^{SWF}$ is nega
 $NSS_n$ is the number of sources or sinks in cell $n$, $Q_{n,iss}^{SS}$ is the flow rate for source or sink $iss$, 
 $Q_n^{ZDG}$ is the outflow from cell $n$ for a zero-depth-gradient condition, 
 $Q_n^{CDB}$ is the outflow from cell $n$ for a critical-depth-boundary condition,
-$Q_{STO}$ is the change in the volume of water stored in cell $n$,
+$Q_n^{STO}$ is the change in the volume of water stored in cell $n$,
 $S_{n}$ is a list of the cells in another surface water model that are connected to cell $n$,
 $Q_{n,m}^{SWF-SWF}$ is the flow into cell $n$ from cell $m$, 
 $G_{n}$ is a list of the cells in an underlying groundwater model that are connected to cell $n$,
@@ -213,17 +213,17 @@ For the numerical implementation in the SWF Model, Manning's equation is express
   Q_{nm}^{SWF} = \overline{C}_{nm} \left ( h_m - h_n \right ).
 \end{equation}
 
-\noindent The conductance-based flow expression allows individual cell conductances to be calculated for each of the two connected reaches and then averaged together to give a representative conductance for the connection.  The representative conductance between reach $n$ and reach $m$ ($\overline{C}_{nm}$) is calculated by averaging a conductance for reach $n$ with a conductance for reach $m$.  The conductance for reach $n$, denoted by $C_{nm}$ ($L^2/T$), is calculated over the distance from the stage calculation point of $n$ to its shared face with cell $m$.  Likewise, the conductance for reach $m$, over the distance between the stage calculation point for $m$ and its shared face with cell $n$ is denoted by $C_{mn}$ and also has dimensions of $L^2/T$.
+\noindent The conductance-based flow expression allows individual cell conductances to be calculated for each of the two connected cells and then averaged together to give a representative conductance for the connection.  The representative conductance between cell $n$ and cell $m$ ($\overline{C}_{nm}$) is calculated by averaging a conductance for cell $n$ with a conductance for cell $m$.  The conductance for cell $n$, denoted by $C_{nm}$ ($L^2/T$), is calculated over the distance from the stage calculation point of $n$ to its shared face with cell $m$.  Likewise, the conductance for cell $m$, over the distance between the stage calculation point for $m$ and its shared face with cell $n$ is denoted by $C_{mn}$ and also has dimensions of $L^2/T$.
 
-The average conductance between reach $n$ and reach $m$ is calculated using the harmonic mean of $C_{nm}$ and $C_{mn}$ to give
+The average conductance between cell $n$ and cell $m$ is calculated using the harmonic mean of $C_{nm}$ and $C_{mn}$ to give
 
 \begin{equation}
   \overline{C}_{nm} = \frac{C_{nm}  C_{mn}}{C_{nm} + C_{mn}}.
 \end{equation}
 
-\noindent The harmonic mean preferentially weights the average toward the lower of the two values and is based on piecewise constant reach properties that may change abruptly at the face between different reaches.
+\noindent The harmonic mean preferentially weights the average toward the lower of the two values and is based on piecewise constant cell properties that may change abruptly at the face between different cells.
 
-The conductance for reach $n$ in the $m$ direction ($C_{nm}$) can be expressed as
+The conductance for cell $n$ in the $m$ direction ($C_{nm}$) can be expressed as
 
 \begin{equation}
   C_{nm} = 
@@ -238,23 +238,23 @@ The conductance for reach $n$ in the $m$ direction ($C_{nm}$) can be expressed a
 \label{eqn:cn}
 \end{equation}
 
-\noindent where $A_n$ is the cross-sectional flow area ($L^2$) for reach $n$ calculated as a function of the water depth, $R_n$ is the hydraulic radius ($L$) for reach $n$, which is the cross-sectional flow area divided by the wetted perimeter, calculated as a function of the water depth, $n_n$ is the Manning's roughness coefficient ($T/L^{\frac{1}{3}}$) for reach $n$, $L_{nm}$ is the distance ($L$) from the stage calculation point in cell $n$ to the shared edge with reach $m$, and $\gamma_n$ is the hydraulic gradient ($L^0$) for reach $n$.
+\noindent where $A_n$ is the cross-sectional flow area ($L^2$) for cell $n$ calculated as a function of the water depth, $R_n$ is the hydraulic radius ($L$) for cell $n$, which is the cross-sectional flow area divided by the wetted perimeter, calculated as a function of the water depth, $n_n$ is the Manning's roughness coefficient ($T/L^{\frac{1}{3}}$) for cell $n$, $L_{nm}$ is the distance ($L$) from the stage calculation point in cell $n$ to the shared edge with cell $m$, and $\gamma_n$ is the hydraulic gradient ($L^0$) for cell $n$.
 
-Several of the terms in equation \ref{eqn:cn} are combined into a single term for reach $n$ called channel conveyance ($\kappa_n$), which is defined as
+Several of the terms in equation \ref{eqn:cn} are combined into a single term for cell $n$ called channel conveyance ($\kappa_n$), which is defined as
 
 \begin{equation}
   \kappa_n = \frac{A_n R_n^{\frac{2}{3}}}{n_n}.
 \label{eqn:conveyance}
 \end{equation}
 
-\noindent Channel conveyance for reach $n$ is calculated as a function of an upstream-weighted water depth.  Thus, channel conveyance for reach $n$ can be written as
+\noindent Channel conveyance for cell $n$ is calculated as a function of an upstream-weighted water depth.  Thus, channel conveyance for cell $n$ can be written as
 
 \begin{equation}
   \kappa_n = \frac{A_n (d_u) R_n (d_u) ^{\frac{2}{3}}}{n_n},
 \label{eqn:conveyancedu}
 \end{equation}
 
-\noindent where the $A_n$ and $R_n$ terms include $(d_u)$ to indicate that they are calculated as a function of $d_u$.  $d_u$ is assigned to the depth of the reach (either from cell $n$ or cell $m$) with the higher stage:
+\noindent where the $A_n$ and $R_n$ terms include $(d_u)$ to indicate that they are calculated as a function of $d_u$.  $d_u$ is assigned to the depth of the cell (either from cell $n$ or cell $m$) with the higher stage:
 
 \[
 d_u = 
@@ -278,7 +278,7 @@ With this definition for channel conveyance, equation \ref{eqn:cn} can be simpli
 \label{eqn:cn2}
 \end{equation}
 
-Channel conveyance is calculated in several different ways depending on how a cross section is defined for a reach.  For the cross sections shown in figure \ref{fig:cxs} a single Manning's roughness coefficient is assigned for the entire section.  If a single Manning's roughness coefficient is used to define the entire section for reach $n$, then the channel conveyance is calculated according to equation \ref{eqn:conveyance}.  If a cross section does not have a constant Manning's roughness coefficient for all line segments that define the channel, as shown for example in Figure \ref{fig:cxs_rough}, then a composite conveyance is calculated by summing the individual conveyance parts for the channel as
+Channel conveyance is calculated in several different ways depending on how a cross section is defined for a cell.  For the cross sections shown in figure \ref{fig:cxs} a single Manning's roughness coefficient is assigned for the entire section.  If a single Manning's roughness coefficient is used to define the entire section for cell $n$, then the channel conveyance is calculated according to equation \ref{eqn:conveyance}.  If a cross section does not have a constant Manning's roughness coefficient for all line segments that define the channel, as shown for example in Figure \ref{fig:cxs_rough}, then a composite conveyance is calculated by summing the individual conveyance parts for the channel as
 
 \begin{equation}
   \kappa_n = \sum_{i=1}^{NLS} \frac{A_{n,i} \left ( \frac {A_{n,i}}{P_{n,i}}\right )^{\frac{2}{3}}}{n_{n,i}},
@@ -289,7 +289,7 @@ Channel conveyance is calculated in several different ways depending on how a cr
 
 \subsection{Sources and Sinks}
 
-The SWF Model supports the addition or removal of water to or from an individual reach using the specified flow (FLW) Package.  
+The SWF Model supports the addition or removal of water to or from an individual cell using the specified flow (FLW) Package.  
 
 
 \subsection{Boundaries}
@@ -426,7 +426,7 @@ Application of equation~\ref{eqn:nr2} requires an expression for the residual of
   + \sum \limits_{iss=1}^{NSS_n} Q_{n,iss}^{SS}
   + Q_n^{ZDG}
   + Q_n^{CDB}
-  - Q_{STO} \\
+  - Q_n^{STO} \\
   + \sum \limits_{m \in S_{n}} Q_{n,m}^{SWF-SWF}
   + \sum \limits_{m \in G_{n}} Q_{n,m}^{SWF-GWF}.
   \end{split}
@@ -443,7 +443,7 @@ J_{n,n} =
 + \sum \limits_{iss=1}^{NSS_n} \frac{\partial Q_{n,iss}^{SS}}{\partial h_n}
 + \frac{\partial Q_n^{ZDG}}{\partial h_n}
 + \frac{\partial Q_n^{CDB}}{\partial h_n} \\
-- \frac{\partial Q_{STO}}{\partial h_n}
+- \frac{\partial Q_n^{STO}}{\partial h_n}
 + \sum \limits_{m \in S_{n}} \frac{\partial Q_{n,m}^{SWF-SWF}}{\partial h_n}
 + \sum \limits_{m \in G_{n}} \frac{\partial Q_{n,m}^{SWF-GWF}}{\partial h_n}
 %\frac{\partial xxx}{\partial h_n}
@@ -456,6 +456,8 @@ J_{n,n} =
 \label{eqn:drndhm}
 J_{n,m} = \frac{\partial r_n}{\partial h_m} = \frac{\partial Q_{n,m}}{\partial h_m}.
 \end{equation}
+
+\noindent where $Q_{n,m}$ is the flow between two model cells $n$ and $m$, which may be surface water or groundwater model cells.
 
 Application of equation \ref{eqn:nr2} to equations \ref{eqn:residual} to \ref{eqn:drndhm} yield the following Newton-Raphson expansion of the CVFD equation for cell $n$,
 
@@ -475,13 +477,29 @@ J_{n,n}^{k-1} h_n^k
 \end{split}
 \end{equation}
 
-\noindent Equation \ref{eqn:nr3} is written so that the terms are in direct correspondence to the terms in equation \ref{eqn:nr2}.  The terms on the left side of equation~\ref{eqn:nr3} represent $\matr{J}^{k-1} \matr{h}^{k}$; the first term on the right side of equation \ref{eqn:nr3} represents the negative residual, $-\matr{r}^{k-1}$, which is simply the sum of the inflows and outflows calculated using the heads from the previous iteration; and, the last two terms on the right side of equation \ref{eqn:nr3} represent $\matr{J}^{k-1} \matr{h}^{k-1}$.  
+\noindent Equation \ref{eqn:nr3} is written so that the terms are in direct correspondence to the terms in equation \ref{eqn:nr2}.  The terms on the left side of equation~\ref{eqn:nr3} represent $\matr{J}^{k-1} \matr{h}^{k}$; the first term on the right side of equation \ref{eqn:nr3} represents the negative residual, $-\matr{r}^{k-1}$, which is simply the sum of the inflows and outflows calculated using the heads from the previous iteration; and, the last four terms on the right side of equation \ref{eqn:nr3} represent $\matr{J}^{k-1} \matr{h}^{k-1}$.  
 
-The terms in equation \ref{eqn:nr3} are assembled into the matrix equations using a package approach.  The form of equation \ref{eqn:nr3} is designed to show how a package adds its individual terms to the matrix equations.  As an example, the $Q_{STO}$ term is shown in three places in equation \ref{eqn:nr3}---once in the coefficient for $h^k_n$ and twice on the right side.  When active, the Storage Package for the SWF Model adds these terms to the matrix equations.
+The terms in equation \ref{eqn:nr3} are assembled into the matrix equations using a modular approach based on the concepts of models, packages, and exchanges.  The form of equation \ref{eqn:nr3} is designed to show how the different components add their individual terms to the matrix equations.  
+
+As an example, a source or sink term, such as $Q_n^{SS}$, which may be a function of the dependent variable $h_n$, can be added to the Newton-Raphson equation for row $n$ by updating the left and right-hand sides of equation \ref{eqn:nr2}.  If equation \ref{eqn:axb} is applied to equation \ref{eqn:nr2}, then the left-hand-side coefficient in the diagonal position of row $n$ is $A_{n,n}$.  The right-hand side for row $n$ is denoted by $b_n$.  To incorporate the effects of $Q_n^{SS}$ into the the matrix equations, these left- and right-hand side values are updated as
+
+\begin{equation}
+\label{eqn:qssa}
+A_{n,n} \leftarrow A_{n,n} + \frac{\partial Q_n^{SS}}{\partial h_n},
+\end{equation}
+
+\noindent and 
+
+\begin{equation}
+\label{eqn:qssb}
+b_{n} \leftarrow b_{n} - Q_n^{SS} + \frac{\partial Q_n^{SS}}{\partial h_n} h_n,
+\end{equation}
+
+\noindent respectively.  A similar approach is used to update the left-and right-hand sides to include the effects of flow between adjacent cells.
 
 \subsection{Derivative Evaluation}
 
-Formulation of the terms in equation~\ref{eqn:nr3} requires calculation of derivatives.  Although in some cases derivatives can be evaluated analytically, a numerical perturbation approach is used to calculate derivatives for the SWF Model.  Derivatives are approximated using a forward difference expressed as
+Formulation of the terms in equation~\ref{eqn:nr3} requires calculation of derivatives.  Although in some cases derivatives can be evaluated analytically, the SWF model uses a numerical perturbation approach to calculate derivatives.  Derivatives are approximated using a forward difference expressed as
 
 \begin{equation}
 \label{eqn:derv}
