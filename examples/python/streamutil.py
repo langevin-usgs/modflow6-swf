@@ -249,7 +249,7 @@ class StreamUtil():
             verts, iverts = self.get_verts_iverts_bygrid()
         else:
             verts, iverts = self.get_verts_iverts_by_linevertices()
-        vertices = [(iv, x, y, 0.) for iv, (x, y) in enumerate(verts)]
+        vertices = [(iv, x, y) for iv, (x, y) in enumerate(verts)]
         cell2d = [(icell, 0.5, len(iverts[icell])) + tuple(iverts[icell]) for icell in range(self.nreaches)]
         return vertices, cell2d
 

@@ -13,15 +13,17 @@
 
 \begin{document}
 
-\title{Surface Water Flow in MODFLOW 6}
+\title{One-Dimensional Channel Flow (CHF) and Two-Dimensional Overland Flow (OLF) in MODFLOW 6}
 \maketitle
 
 \tableofcontents
 
 \section{Introduction}
-The Surface Water Flow (SWF) Model simulates one-dimensional channel flow and two-dimensional overland flow using the diffusive-wave approximation to the Saint-Venant equations.  The SWF Model is integrated into the MODFLOW 6 framework as a new type of supported model.  An SWF Model can be run by itself in a MODFLOW 6 simulation or it can be coupled with a Groundwater Flow (GWF) Model using an SWF-GWF Exchange.
+Two new surface water flow models were developed for MODFLOW 6.  One-dimensional flow in surface water channels can be represented using the Channel Flow (CHF) Model.  Two-dimensional overland flow can be represented using the Overland Flow (OLF) Model.  Both models simulate flow using the diffusive-wave approximation to the Saint-Venant equations.  The models are integrated into the MODFLOW 6 framework as new types of supported models. The CHF and OLF Models can be run by themselves, or they can be coupled with a Groundwater Flow (GWF) Model using either a CHF-GWF Exchange or an OLF-GWF Exchange.
 
-There are three different types of discretization packages that can be used with the SWF Model.  These include 
+The CHF Model requires use of the Discretization by Vertices in One Dimension (DISV1D) package.  The OLF Model rquires use of either the Discretization by Vertices in Two Dimensions (DISV2D) Package or the Structured Discretization in Two Dimensions (DIS2D) Package.
+
+Several new types of discretization packages were develop to support surface water flow in MODFLOW.  These new discretization packages include 
 
 \begin{itemize}
   \item Discretization by Vertices in One Dimension (DISV1D), 
@@ -29,24 +31,25 @@ There are three different types of discretization packages that can be used with
   \item Structured Discretization in Two Dimensions (DIS2D).
 \end{itemize}
 
-\noindent For SWF Models that simulate one-dimensional channel flow, the DISV1D Package must be used.  For SWF models that simulate two-dimensional channel flow, either the DIV2D or DIS2D Packages must be used.  Because an SFW Model can use only one discretization package, an SWF Model must be either a channel model or an overland flow model.  More than one SWF Model can be used in a simulation.
+\noindent For the CHF Model, the DISV1D Package must be used.  For the OLF Model, either the DISV2D or DIS2D Packages must be used.  More than one surface water models can be used in a simulation.
 
-In addition to the discretization package, the SWF Model supports other required and optional packages as shown in table \ref{table:ftype-swf}.
+In addition to the discretization package, the CHF and SWF models supports other required and optional packages as shown in table \ref{table:ftype-swf}.
 
 \begin{table}[ht]
-   \caption{Packages that can be activated and used with the Surface Water Flow (SWF) Model.}
+   \caption{Packages that can be activated and used with the Channel Flow (CHF) and Overland Flow (OLF) Models.}
    \begin{tabular*}{\columnwidth}{l l l}
    \hline
    \hline
    File Type & Input File Description & Multi-Package \\
    \hline
-   DISV1D6 & Discretization by Vertices in One Dimension \\
-   DISV2D6 & Discretization by Vertices in Two Dimensions \\
-   DIS2D6 & Structured Discretization in Two Dimensions \\
+   DISV1D6 & Discretization by Vertices in 1D (CHF only) \\
+   DISV2D6 & Discretization by Vertices in 2D (OLF only) \\
+   DIS2D6 & Structured Discretization in 2D (OLF only) \\
+   DFW6 & Diffusive Wave \\ 
+   CXS6 & Cross Section (CHF only) \\ 
+   STO6 & Storage \\
    IC6 & Initial Conditions \\
    OC6 & Output Control \\
-   DFW6 & Diffusive Wave \\ 
-   STO6 & Storage \\
    CHD6 & Time-Variant Specified Head & * \\
    FLW6 & Specified Flow & * \\
    ZDG6 & Zero-Depth Gradient Outflow &   \\
@@ -120,7 +123,7 @@ The surface water flow equation in MODFLOW 6 is discretized using a control-volu
 
 The SWF Model supports two different types of discretization approaches: a one-dimensional channel network and a two-dimensional overland flow grid.  The two-dimensional overland flow grid may use either a structured grid consisting of rows and columns or an unstructured grid specified using vertices and cells that are defined using those vertices.  A SWF Model must use either the one-dimensional channel network or the the two-dimensional overland flow discretization approaches.  
 
-The characteristics of a model cell are different depending on whether the model represents channel flow or overland flow.  For one-dimensional channels, surface water flows through a network of connected model cells.  Model cells are one dimensional in plan view but can have different cross-sectional geometries.  The default cross-sectional geometry corresponds to a hydraulically wide rectangular channel in which there is no resistance to flow along the vertical sides.  If the default channel configuration does not represent field conditions, then the Cross Section (CXS) Package can be activated and used to provide more detailed cross-section information.  Two-dimensional overland flow is modeled on a structured or unstructured grid.  For each cell, the SWF Model calculates the water surface elevation for the cell and for flow between each model cell and its neighbors.  Resistance to flow occurs through a Manning's roughness coefficient.
+The characteristics of a model cell are different depending on whether the model represents channel flow or overland flow.  For one-dimensional channels, surface water flows through a network of connected model cells.  Model cells are one dimensional in plan view but can have different cross-sectional geometries.  The default cross-sectional geometry corresponds to a hydraulically wide rectangular channel in which there is no resistance to flow along vertical side walls.  If the default channel configuration does not represent field conditions, then the Cross Section (CXS) Package can be activated and used to provide more detailed cross-section information.  Two-dimensional overland flow is modeled on a structured or unstructured grid.  For each cell, the SWF Model calculates the water surface elevation for the cell and for flow between each model cell and its neighbors.  Resistance to flow occurs through a Manning's roughness coefficient.
 
 \subsubsection{One-Dimensional Channel Flow}
 A one-dimensional channel network is represented using the Discretization by Vertices in One Dimension (DISV1D) Package.  An example of a channel network is shown in figure~\ref{fig:channel_network}.  The channel network is discretized into individual control volumes called cells.  The general term ``cell'' is used here, instead of ``reach,'' for consistency with MODFLOW terminology.  The SWF Model solves for the water level in each cell by balancing the flows between cells with storage changes and sources.  Stage calculation points within a cell are typically located halfway between the cell starting and ending vertices; however, the user may adjust the stage calculation point in either direction (toward or away from the first cell vertex), which can be advantageous in some situations.  A cell is connected to another cell when they share a vertex.  Cells do not need to be defined in any particular order.  If a cell terminates at a vertex and that vertex is not shared by another cell, then by default, there is no outflow from the ending vertex location.  If the user intends for outflow to occur, then a stress package must be activated and assigned to that cell.

@@ -48,7 +48,26 @@ def build_simulation(
 
     def add_model(sim, modelname, dis_type):
         # surface water model
-        swf = flopy.mf6.ModflowSwf(sim, modelname=modelname, save_flows=True)
+        if dis_type == "dis2d":
+            Swf = flopy.mf6.ModflowOlf
+            Dis = flopy.mf6.ModflowOlfdis2D
+            Dfw = flopy.mf6.ModflowOlfdfw
+            Ic = flopy.mf6.ModflowOlfic
+            Oc = flopy.mf6.ModflowOlfoc
+            Chd = flopy.mf6.ModflowOlfchd
+            Flw = flopy.mf6.ModflowOlfflw
+        elif dis_type == "disv1d":
+            Swf = flopy.mf6.ModflowChf
+            Dis = flopy.mf6.ModflowChfdisv1D
+            Dfw = flopy.mf6.ModflowChfdfw
+            Ic = flopy.mf6.ModflowChfic
+            Oc = flopy.mf6.ModflowChfoc
+            Chd = flopy.mf6.ModflowChfchd
+            Flw = flopy.mf6.ModflowChfflw
+        else:
+            raise Exception(f"unknown dis type: {dis_type}")
+
+        swf = Swf(sim, modelname=modelname, save_flows=True)
 
         nouter, ninner = 200, 30
         hclose, relax = 1e-8, 0.97
@@ -78,7 +97,7 @@ def build_simulation(
 
         land_surface = 0.0
         if dis_type == "dis2d":
-            _ = flopy.mf6.ModflowSwfdis2D(
+            _ = Dis(
                 swf,
                 nrow=1,
                 ncol=ncol,
@@ -92,7 +111,7 @@ def build_simulation(
             nvert = nodes + 1
             vertices = [[j, j * dx, 0.0] for j in range(nodes + 1)]
             cell2d = [[j, 0.5, 2, j, j + 1] for j in range(nodes)]
-            _ = flopy.mf6.ModflowSwfdisv1D(
+            _ = Dis(
                 swf,
                 nodes=nodes,
                 nvert=nvert,
@@ -103,10 +122,8 @@ def build_simulation(
                 vertices=vertices,
                 cell2d=cell2d,
             )
-        else:
-            raise Exception(f"unknown dis type: {dis_type}")
 
-        _ = flopy.mf6.ModflowSwfdfw(
+        _ = Dfw(
             swf,
             dev_swr_conductance=dev_swr_conductance,
             central_in_space=central_in_space,
@@ -117,13 +134,13 @@ def build_simulation(
             idcxs=None,
         )
 
-        _ = flopy.mf6.ModflowSwfic(
+        _ = Ic(
             swf,
             strt=0.5 * (h0 + h1),
         )
 
         # output control
-        _ = flopy.mf6.ModflowSwfoc(
+        _ = Oc(
             swf,
             budget_filerecord=f"{modelname}.bud",
             stage_filerecord=f"{modelname}.stage",
@@ -145,7 +162,7 @@ def build_simulation(
             chd_spd = [(nodes - 1, h1)]
             if Q0 is None:
                 chd_spd.append((0, h0))
-        _ = flopy.mf6.ModflowSwfchd(
+        _ = Chd(
             swf,
             maxbound=len(chd_spd),
             print_input=True,
@@ -159,7 +176,7 @@ def build_simulation(
                 flw_spd = [(0, 0, Q0)]
             elif dis_type == "disv1d":
                 flw_spd = [(0, Q0)]
-            _ = flopy.mf6.ModflowSwfflw(
+            _ = Flw(
                 swf,
                 maxbound=len(flw_spd),
                 print_input=True,
