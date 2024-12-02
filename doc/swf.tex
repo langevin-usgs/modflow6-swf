@@ -13,7 +13,7 @@
 
 \begin{document}
 
-\title{One-Dimensional Channel Flow (CHF) and Two-Dimensional Overland Flow (OLF) in MODFLOW 6}
+\title{Surface Water Flow Models for One-Dimensional Channel Flow (CHF) and Two-Dimensional Overland Flow (OLF) in MODFLOW 6}
 \maketitle
 
 \tableofcontents
@@ -735,6 +735,52 @@ The simulation was run with and without leakage.  Results from the SWF Model for
 	\label{fig:pinder-sauer}
 \end{figure}
 
+\subsection{Modified Transient Loop Network}
+% background
+% purpose
+To test the bi-directional flow capabilities in the Surface Water Routing (SWR) Process for MODFLOW-2005, \cite{hughes2012documentation} developed the transient loop network problem shown in Figure~\ref{fig:loop_network}.  The problem consists of a stream network characterized by an upstream section consisting of two reaches.  At the end of the second reach, the stream bifurcates into two separate channels.  The upper channel consists of 5 reaches, and the lower channel also consists of 5 reaches.  The last reach in each channel flows into a dowstream channel that consists of 5 reaches.  The last downstream reach is assigned a constant head condition, which allows outflow from the stream network.  
+
+The stream network configuration and the individual reach properties are based on those described by \cite{hughes2012documentation}.  Each reach is defined by a trapezoidal cross section.  There are three different trapezoidal configurations.  The bottom elevation of the channel is 2.0 m for the uppermost reach and gradually slopes down to an elevation of 0.0 m for the downstream reach.  A constant Manning's resistance coefficient of 0.03 $m^{1 \over 3}/s$ is used for all of the reaches.
+
+A transient simulation spanning 7 days was used to simulate flow through the network in response to pulse inflow at two different locations.  Inflow is specified for reaches 1 and 5 according to the inflow hydrographs shown in Figure~\ref{fig:loop_network_inflow}.  The unique feature of this problem is that the inflow pulse into reach 5 causes a flow reversal in part of the network.  Testing the capability of CHF Model to accurately simulate this flow reversal is a primary goal of this example.
+
+%description
+The original version of this problem described by  \cite{hughes2012documentation} included fixed crest weirs in reaches 14 and 18.  Because weirs cannot be simulated with the present version of the CHF Model in MODFLOW 6, the problem was modified to exclude these features.  Instead, flow from reach 14 into reach 15 is calculated using the diffusive wave approximation.  At the downstream end, a constant head condition is assigned to reach 18 at a value of 2.0 m.  The results for this modified problem are different from the results originally reported by \cite{hughes2012documentation}.  Results are shown here for this modified version of the problem without weirs.  For comparison with the MODFLOW CHF Model, the modified problem was also run with the SWR Process for MODFLOW-2005.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.40]{figures/loop_network.png}
+	\caption[Map of the one-dimensional loop network.]{Map showing the one-dimensional loop network used by \cite{hughes2012documentation} to test the bi-directional flow capabilities in the Surface Water Routing (SWR) Process for MODFLOW-2005.}
+	\label{fig:loop_network}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.70]{figures/loop_network_inflow.png}
+	\caption[Specified inflow rates for the loop network problem.]{Specified inflow rates for the loop network problem.  Modified from  \cite{hughes2012documentation}.}
+	\label{fig:loop_network_inflow}
+\end{figure}
+
+% results
+Simulated stages for four different reaches (1, 4, 15, and 18) are shown in Figure~\ref{fig:loop_network_stage} for both the CHF Model and for the SWR Process.  Simulated stages from the CHF Model are in good agreement with those from the SWR Process.  Stages in the network are clearly affected by the two inflow pulses.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.70]{figures/loop_network_stage.png}
+	\caption[Simulated stage for the loop network problem.]{Simulated stage for the loop network problem.  Results from MODFLOW 6 are compared with the results from the Surface Water Routing (SWR) Process for MODFLOW-2005.}
+	\label{fig:loop_network_stage}
+\end{figure}
+
+Simulated flow is shown in Figure~\ref{fig:loop_network_flow} for two observation locations (4 and 5) for both the CHF Model and the SWR Process.  At these two locations, positive flow is defined as flow the right (from reach 4 to reach 5 for observation 4, and from reach 5 to reach 6 for observation 5).  Prior to the inflow pulse into reach 1, which starts between 5 and 10 hours into the simulation, the system responds to the initial conditions.  An initial stage of 3.0 m is assigned to all reaches except the last four, which are assigned a value of 2.0 m.  The initial peak in the simulated flow at observation 4 occurs in response to the inflow at reach 1.  However, as inflow in reach 5 begins to increase, the flow at observation 4 reverses direction, whereas the flow at observation 5 continues to increase.  Once the inflow pulses subside, simulated flow at these two locations approaches zero as there is no other source of flow through the system.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.70]{figures/loop_network_flow.png}
+	\caption[Simulated flow for the loop network problem.]{Simulated flow for the loop network problem.  Results from MODFLOW 6 are compared with the results from the Surface Water Routing (SWR) Process for MODFLOW-2005.}
+	\label{fig:loop_network_flow}
+\end{figure}
+
+This test is based on a comparison with the SWR Process for MODFLOW-2005.  Although such a test is not definitive, it does provide confidence in the implementation of the surface water flow equations.  It is worth mentioning that results from the SWR Process for the example with the fixed crest weirs was compared with the results from the HEC-RAS program, which is based on a dynamic wave model for surface water flow.  Results from the SWR Process for that problem were in good agreement from results from HEC-RAS.
 
 % \bibliographystyle{plain}
 \bibliographystyle{apalike}
